@@ -1,0 +1,822 @@
+[
+ {
+  "id": 39118,
+  "name": "Café de Panamá Maragogype Rojo",
+  "slug": "cafe-de-panama-maragogype-rojo",
+  "parent": 0,
+  "type": "variable",
+  "variation": "",
+  "permalink": "https://cafedelirante.com.ar/tienda/cafe/cafe-de-panama-maragogype-rojo/",
+  "sku": "104020001-4020002-1",
+  "on_sale": false,
+  "prices": {
+   "price": "42900",
+   "regular_price": "42900",
+   "sale_price": "42900",
+   "price_range": {
+    "min_amount": "42900",
+    "max_amount": "149900"
+   },
+   "currency_code": "ARS",
+   "currency_symbol": "$",
+   "currency_minor_unit": 0,
+   "currency_decimal_separator": ".",
+   "currency_thousand_separator": ",",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "average_rating": "0",
+  "review_count": 0,
+  "images": [
+   {
+    "id": 39184,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME.jpg",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-1000x1230.jpg",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME.jpg 1131w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-407x500.jpg 407w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-650x800.jpg 650w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-768x945.jpg 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-1000x1230.jpg 1000w",
+    "sizes": "(max-width: 1131px) 100vw, 1131px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-1000x1230.jpg 1000w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-407x500.jpg 407w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-650x800.jpg 650w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME-768x945.jpg 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/panama_maragogype-rojo_ME.jpg 1131w",
+    "thumbnail_sizes": "(max-width: 1000px) 100vw, 1000px",
+    "name": "panamá_maragogype rojo_ME",
+    "alt": ""
+   },
+   {
+    "id": 39204,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png.png 910w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-438x500.png 438w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-700x800.png 700w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-768x878.png 768w",
+    "sizes": "(max-width: 910px) 100vw, 910px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png.png 910w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-438x500.png 438w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-700x800.png 700w, https://cafedelirante.com.ar/wp-content/uploads/2026/08/ficha-tecnica_panama_maragogype-rojo_png-768x878.png 768w",
+    "thumbnail_sizes": "(max-width: 910px) 100vw, 910px",
+    "name": "ficha técnica_panamá_maragogype rojo_png",
+    "alt": ""
+   }
+  ],
+  "categories": [
+   {
+    "id": 16,
+    "name": "Café de especialidad",
+    "slug": "cafe",
+    "link": "https://cafedelirante.com.ar/tienda/cafe/"
+   }
+  ],
+  "tags": [],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 1,
+    "name": "Elegí tu Molienda",
+    "taxonomy": "pa_elegi-tu-molienda",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 17,
+      "name": "En Grano",
+      "slug": "en-grano"
+     },
+     {
+      "id": 18,
+      "name": "Molido Aeropress",
+      "slug": "molido-aeropress"
+     },
+     {
+      "id": 19,
+      "name": "Molido Espresso",
+      "slug": "molido-espresso"
+     },
+     {
+      "id": 20,
+      "name": "Molido Filtro",
+      "slug": "molido-filtro"
+     },
+     {
+      "id": 21,
+      "name": "Molido Prensa Francesa",
+      "slug": "molido-prensa-francesa"
+     },
+     {
+      "id": 22,
+      "name": "Molino Volturno",
+      "slug": "molino-volturno"
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "name": "Elegí el Peso",
+    "taxonomy": "pa_elegi-el-peso",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 23,
+      "name": "1 Kilo",
+      "slug": "1-kilo"
+     },
+     {
+      "id": 24,
+      "name": "250 Gr.",
+      "slug": "250-gr"
+     }
+    ]
+   }
+  ],
+  "variations": [
+   {
+    "id": 39119,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "en-grano"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39120,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "en-grano"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 39121,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-aeropress"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39122,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-aeropress"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 39123,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-espresso"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39124,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-espresso"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 39125,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-filtro"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39126,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-filtro"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 39127,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-prensa-francesa"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39128,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-prensa-francesa"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 39129,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molino-volturno"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 39130,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molino-volturno"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   }
+  ],
+  "has_options": true,
+  "is_purchasable": true,
+  "is_in_stock": true,
+  "is_on_backorder": false,
+  "sold_individually": false,
+  "weight": "",
+  "formatted_weight": "N/D",
+  "formatted_dimensions": "N/D"
+ },
+ {
+  "id": 38287,
+  "name": "Drip Coffee Mix cafés",
+  "slug": "drip-coffee-mix-cafes",
+  "parent": 0,
+  "type": "simple",
+  "variation": "",
+  "permalink": "https://cafedelirante.com.ar/tienda/drip-coffee/drip-coffee-mix-cafes/",
+  "sku": "105010000-3-1-10",
+  "on_sale": false,
+  "prices": {
+   "price": "24000",
+   "regular_price": "24000",
+   "sale_price": "24000",
+   "price_range": null,
+   "currency_code": "ARS",
+   "currency_symbol": "$",
+   "currency_minor_unit": 0,
+   "currency_decimal_separator": ".",
+   "currency_thousand_separator": ",",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "average_rating": "0",
+  "review_count": 0,
+  "images": [
+   {
+    "id": 38206,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-1000x1333.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes.png 1086w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-375x500.png 375w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-600x800.png 600w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-768x1024.png 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-1000x1333.png 1000w",
+    "sizes": "(max-width: 1086px) 100vw, 1086px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-1000x1333.png 1000w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-375x500.png 375w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-600x800.png 600w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes-768x1024.png 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/caja-drip_mix-cafes.png 1086w",
+    "thumbnail_sizes": "(max-width: 1000px) 100vw, 1000px",
+    "name": "caja drip_mix cafés",
+    "alt": ""
+   },
+   {
+    "id": 38933,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-1000x667.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0.png 1535w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-500x334.png 500w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-800x534.png 800w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-768x512.png 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-1000x667.png 1000w",
+    "sizes": "(max-width: 1535px) 100vw, 1535px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-1000x667.png 1000w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-500x334.png 500w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-800x534.png 800w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0-768x512.png 768w, https://cafedelirante.com.ar/wp-content/uploads/2026/07/image0.png 1535w",
+    "thumbnail_sizes": "(max-width: 1000px) 100vw, 1000px",
+    "name": "paso_a_paso_mix_drip",
+    "alt": "paso_a_paso_mix_drip"
+   }
+  ],
+  "categories": [
+   {
+    "id": 96,
+    "name": "Drip Coffee",
+    "slug": "drip-coffee",
+    "link": "https://cafedelirante.com.ar/tienda/drip-coffee/"
+   }
+  ],
+  "tags": [],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 1,
+    "name": "Elegí tu Molienda",
+    "taxonomy": "pa_elegi-tu-molienda",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 17,
+      "name": "En Grano",
+      "slug": "en-grano",
+      "default": false
+     },
+     {
+      "id": 18,
+      "name": "Molido Aeropress",
+      "slug": "molido-aeropress",
+      "default": false
+     },
+     {
+      "id": 19,
+      "name": "Molido Espresso",
+      "slug": "molido-espresso",
+      "default": false
+     },
+     {
+      "id": 20,
+      "name": "Molido Filtro",
+      "slug": "molido-filtro",
+      "default": true
+     },
+     {
+      "id": 21,
+      "name": "Molido Prensa Francesa",
+      "slug": "molido-prensa-francesa",
+      "default": false
+     },
+     {
+      "id": 22,
+      "name": "Molino Volturno",
+      "slug": "molino-volturno",
+      "default": false
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "name": "Elegí el Peso",
+    "taxonomy": "pa_elegi-el-peso",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 23,
+      "name": "1 Kilo",
+      "slug": "1-kilo",
+      "default": false
+     },
+     {
+      "id": 24,
+      "name": "250 Gr.",
+      "slug": "250-gr",
+      "default": true
+     }
+    ]
+   }
+  ],
+  "variations": [],
+  "has_options": false,
+  "is_purchasable": true,
+  "is_in_stock": true,
+  "is_on_backorder": false,
+  "sold_individually": false,
+  "weight": "",
+  "formatted_weight": "N/D",
+  "formatted_dimensions": "N/D"
+ },
+ {
+  "id": 25292,
+  "name": "Dripper Timemore Acrílico.",
+  "slug": "dripper-timemore-acrilico",
+  "parent": 0,
+  "type": "simple",
+  "variation": "",
+  "permalink": "https://cafedelirante.com.ar/tienda/accesorios/dripper-timemore-acrilico/",
+  "sku": "02020105-2-1-1-1",
+  "on_sale": false,
+  "prices": {
+   "price": "34000",
+   "regular_price": "34000",
+   "sale_price": "34000",
+   "price_range": null,
+   "currency_code": "ARS",
+   "currency_symbol": "$",
+   "currency_minor_unit": 0,
+   "currency_decimal_separator": ".",
+   "currency_thousand_separator": ",",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "average_rating": "0",
+  "review_count": 0,
+  "images": [
+   {
+    "id": 36491,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1.png 869w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-408x500.png 408w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-652x800.png 652w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-768x942.png 768w",
+    "sizes": "(max-width: 869px) 100vw, 869px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1.png 869w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-408x500.png 408w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-652x800.png 652w, https://cafedelirante.com.ar/wp-content/uploads/2024/05/dripper-timemore-acrilico-1-768x942.png 768w",
+    "thumbnail_sizes": "(max-width: 869px) 100vw, 869px",
+    "name": "dripper-timemore-acrílico",
+    "alt": ""
+   }
+  ],
+  "categories": [
+   {
+    "id": 76,
+    "name": "Accesorios",
+    "slug": "accesorios",
+    "link": "https://cafedelirante.com.ar/tienda/accesorios/"
+   },
+   {
+    "id": 63,
+    "name": "Maquinas de Café",
+    "slug": "maquinas-de-cafe",
+    "link": "https://cafedelirante.com.ar/tienda/maquinas-de-cafe/"
+   }
+  ],
+  "tags": [],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 1,
+    "name": "Elegí tu Molienda",
+    "taxonomy": "pa_elegi-tu-molienda",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 17,
+      "name": "En Grano",
+      "slug": "en-grano"
+     },
+     {
+      "id": 20,
+      "name": "Molido Filtro",
+      "slug": "molido-filtro"
+     }
+    ]
+   }
+  ],
+  "variations": [],
+  "has_options": false,
+  "is_purchasable": true,
+  "is_in_stock": true,
+  "is_on_backorder": false,
+  "sold_individually": false,
+  "weight": "",
+  "formatted_weight": "N/D",
+  "formatted_dimensions": "N/D"
+ },
+ {
+  "id": 18,
+  "name": "Blend de la Casa",
+  "slug": "blend-de-la-casa",
+  "parent": 0,
+  "type": "variable",
+  "variation": "",
+  "permalink": "https://cafedelirante.com.ar/tienda/cafe/blend-de-la-casa/",
+  "sku": "105010000",
+  "on_sale": false,
+  "prices": {
+   "price": "20900",
+   "regular_price": "20900",
+   "sale_price": "20900",
+   "price_range": {
+    "min_amount": "20900",
+    "max_amount": "194900"
+   },
+   "currency_code": "ARS",
+   "currency_symbol": "$",
+   "currency_minor_unit": 0,
+   "currency_decimal_separator": ".",
+   "currency_thousand_separator": ",",
+   "currency_prefix": "$",
+   "currency_suffix": ""
+  },
+  "average_rating": "5.00",
+  "review_count": 8,
+  "images": [
+   {
+    "id": 33505,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png 992w, https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe-470x500.png 470w",
+    "sizes": "(max-width: 992px) 100vw, 992px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png 992w, https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe-470x500.png 470w",
+    "thumbnail_sizes": "(max-width: 992px) 100vw, 992px",
+    "name": "blend-dela-casa-cafe",
+    "alt": "Cafe Blend de La Casa"
+   },
+   {
+    "id": 38057,
+    "src": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante.png",
+    "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante.png",
+    "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante.png 910w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-438x500.png 438w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-701x800.png 701w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-768x876.png 768w",
+    "sizes": "(max-width: 910px) 100vw, 910px",
+    "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante.png 910w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-438x500.png 438w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-701x800.png 701w, https://cafedelirante.com.ar/wp-content/uploads/2026/06/ficha_tecnica_cafe_blend_delirante-768x876.png 768w",
+    "thumbnail_sizes": "(max-width: 910px) 100vw, 910px",
+    "name": "Ficha técnica Blend de la Casa | Café Delirante",
+    "alt": "Ficha técnica del Blend de la Casa de Café Delirante"
+   }
+  ],
+  "categories": [
+   {
+    "id": 16,
+    "name": "Café de especialidad",
+    "slug": "cafe",
+    "link": "https://cafedelirante.com.ar/tienda/cafe/"
+   },
+   {
+    "id": 82,
+    "name": "Hotsale",
+    "slug": "hotsale",
+    "link": "https://cafedelirante.com.ar/tienda/hotsale/"
+   }
+  ],
+  "tags": [],
+  "brands": [],
+  "attributes": [
+   {
+    "id": 1,
+    "name": "Elegí tu Molienda",
+    "taxonomy": "pa_elegi-tu-molienda",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 17,
+      "name": "En Grano",
+      "slug": "en-grano"
+     },
+     {
+      "id": 18,
+      "name": "Molido Aeropress",
+      "slug": "molido-aeropress"
+     },
+     {
+      "id": 19,
+      "name": "Molido Espresso",
+      "slug": "molido-espresso"
+     },
+     {
+      "id": 20,
+      "name": "Molido Filtro",
+      "slug": "molido-filtro"
+     },
+     {
+      "id": 21,
+      "name": "Molido Prensa Francesa",
+      "slug": "molido-prensa-francesa"
+     },
+     {
+      "id": 22,
+      "name": "Molino Volturno",
+      "slug": "molino-volturno"
+     }
+    ]
+   },
+   {
+    "id": 2,
+    "name": "Elegí el Peso",
+    "taxonomy": "pa_elegi-el-peso",
+    "has_variations": true,
+    "terms": [
+     {
+      "id": 23,
+      "name": "1 Kilo",
+      "slug": "1-kilo",
+      "default": false
+     },
+     {
+      "id": 24,
+      "name": "250 Gr.",
+      "slug": "250-gr",
+      "default": true
+     },
+     {
+      "id": 109,
+      "name": "3 Kilos",
+      "slug": "3-kilos",
+      "default": false
+     }
+    ]
+   }
+  ],
+  "variations": [
+   {
+    "id": 39234,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "en-grano"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "3-kilos"
+     }
+    ]
+   },
+   {
+    "id": 7218,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "en-grano"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7217,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "en-grano"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 7220,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-aeropress"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7219,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-aeropress"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 7222,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-espresso"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7221,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-espresso"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 7224,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-filtro"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7223,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-filtro"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 7226,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-prensa-francesa"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7225,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molido-prensa-francesa"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   },
+   {
+    "id": 7228,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molino-volturno"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "250-gr"
+     }
+    ]
+   },
+   {
+    "id": 7227,
+    "attributes": [
+     {
+      "name": "Elegí tu Molienda",
+      "value": "molino-volturno"
+     },
+     {
+      "name": "Elegí el Peso",
+      "value": "1-kilo"
+     }
+    ]
+   }
+  ],
+  "has_options": true,
+  "is_purchasable": true,
+  "is_in_stock": true,
+  "is_on_backorder": false,
+  "sold_individually": false,
+  "weight": "",
+  "formatted_weight": "N/D",
+  "formatted_dimensions": "N/D"
+ }
+]

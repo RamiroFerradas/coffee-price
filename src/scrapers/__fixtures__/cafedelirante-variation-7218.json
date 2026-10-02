@@ -1,0 +1,52 @@
+{
+ "id": 7218,
+ "name": "Blend de la Casa",
+ "slug": "blend-de-la-casa-2",
+ "parent": 18,
+ "type": "variation",
+ "variation": "Elegí tu Molienda: En Grano, Elegí el Peso: 250 Gr.",
+ "permalink": "https://cafedelirante.com.ar/tienda/cafe/blend-de-la-casa/?attribute_pa_elegi-tu-molienda=en-grano&attribute_pa_elegi-el-peso=250-gr",
+ "sku": "105010000",
+ "on_sale": false,
+ "prices": {
+  "price": "20900",
+  "regular_price": "20900",
+  "sale_price": "20900",
+  "price_range": null,
+  "currency_code": "ARS",
+  "currency_symbol": "$",
+  "currency_minor_unit": 0,
+  "currency_decimal_separator": ".",
+  "currency_thousand_separator": ",",
+  "currency_prefix": "$",
+  "currency_suffix": ""
+ },
+ "average_rating": "0",
+ "review_count": 0,
+ "images": [
+  {
+   "id": 33505,
+   "src": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png",
+   "thumbnail": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png",
+   "srcset": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png 992w, https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe-470x500.png 470w",
+   "sizes": "(max-width: 992px) 100vw, 992px",
+   "thumbnail_srcset": "https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe.png 992w, https://cafedelirante.com.ar/wp-content/uploads/2025/10/blend-dela-casa-cafe-470x500.png 470w",
+   "thumbnail_sizes": "(max-width: 992px) 100vw, 992px",
+   "name": "blend-dela-casa-cafe",
+   "alt": "Cafe Blend de La Casa"
+  }
+ ],
+ "categories": [],
+ "tags": [],
+ "brands": [],
+ "attributes": [],
+ "variations": [],
+ "has_options": false,
+ "is_purchasable": true,
+ "is_in_stock": true,
+ "is_on_backorder": false,
+ "sold_individually": false,
+ "weight": "",
+ "formatted_weight": "N/D",
+ "formatted_dimensions": "N/D"
+}
