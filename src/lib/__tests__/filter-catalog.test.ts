@@ -399,6 +399,82 @@ describe("gramFacetOptions", () => {
   });
 });
 
+describe("canonical gram buckets", () => {
+  const tastingBox = product({ id: "t450", grams: 450 });
+  const stored480 = product({ id: "t480", grams: 480 });
+  const halfKilo = product({ id: "h500", grams: 500 });
+  const stored125 = product({ id: "s125", grams: 125 });
+  const stored130 = product({ id: "s130", grams: 130 });
+  const quarterKilo = product({ id: "q250", grams: 250 });
+  const kilo = product({ id: "k1000", grams: 1000 });
+  const twoAndAHalfKilo = product({ id: "k2500", grams: 2500 });
+  const noGrams = product({ id: "ng", grams: null, price_per_kg: null });
+
+  it("collapses 450 + 480 + 500 into exactly one 500 chip", () => {
+    expect(gramFacetOptions([tastingBox, stored480, halfKilo], defaultFilters())).toEqual({
+      values: [500],
+      hasNull: false,
+    });
+  });
+
+  it("keeps the sin gramaje chip when the pool mixes nulls with a collapsed bucket", () => {
+    expect(gramFacetOptions([tastingBox, stored480, halfKilo, noGrams], defaultFilters())).toEqual({
+      values: [500],
+      hasNull: true,
+    });
+  });
+
+  it("collapses 125 + 130 under one 125 chip and lists chips descending", () => {
+    expect(gramFacetOptions([stored125, stored130, quarterKilo], defaultFilters()).values).toEqual([
+      250, 125,
+    ]);
+  });
+
+  it("keeps kg products exact", () => {
+    expect(gramFacetOptions([kilo, twoAndAHalfKilo], defaultFilters()).values).toEqual([2500, 1000]);
+  });
+
+  it("matches a bucketed selection against exact stored grams", () => {
+    const pool = [tastingBox, stored480, halfKilo, quarterKilo, kilo, noGrams];
+    expect(filterCatalog(pool, { ...defaultFilters(), grams: [500] })).toEqual([
+      tastingBox,
+      stored480,
+      halfKilo,
+    ]);
+    expect(filterCatalog(pool, { ...defaultFilters(), grams: [1000] })).toEqual([kilo]);
+    expect(
+      filterCatalog([stored125, stored130, quarterKilo], { ...defaultFilters(), grams: [125] }),
+    ).toEqual([stored125, stored130]);
+  });
+
+  it("keeps null grams away from numeric chips and on the -1 sentinel", () => {
+    const pool = [halfKilo, noGrams];
+    expect(filterCatalog(pool, { ...defaultFilters(), grams: [500] })).toEqual([halfKilo]);
+    expect(filterCatalog(pool, { ...defaultFilters(), grams: [NO_GRAMS] })).toEqual([noGrams]);
+  });
+
+  it("selects products bucketing to 500 from an old ?grams=450 bookmark", () => {
+    const filters = parseFilters({ grams: "450" });
+    expect(filters.grams).toEqual([500]);
+    expect(filterCatalog([tastingBox, stored480, halfKilo, quarterKilo], filters)).toEqual([
+      tastingBox,
+      stored480,
+      halfKilo,
+    ]);
+  });
+
+  it("never buckets the -1 sentinel", () => {
+    expect(parseFilters({ grams: "-1" }).grams).toEqual([NO_GRAMS]);
+    expect(filterCatalog([halfKilo, noGrams], parseFilters({ grams: "-1" }))).toEqual([noGrams]);
+  });
+
+  it("writes canonical buckets back to the URL", () => {
+    expect(serializeFilters({ ...defaultFilters(), grams: [450, NO_GRAMS] })).toEqual({
+      grams: "500,-1",
+    });
+  });
+});
+
 describe("roasterFacetOptions", () => {
   const cafe = product({ id: "c" });
   const gear = product({

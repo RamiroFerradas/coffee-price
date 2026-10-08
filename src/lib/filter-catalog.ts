@@ -1,5 +1,5 @@
 import { STORES } from "@/scrapers/stores";
-import { availableGrams, sortGramValues } from "@/lib/format";
+import { availableGrams, bucketGrams, sortGramValues } from "@/lib/format";
 import type { Product, StoreId } from "@/lib/types";
 
 export type SortKey =
@@ -64,7 +64,17 @@ function parseGramsParam(value: string | string[] | undefined): number[] {
     const grams = Number(token);
     if (Number.isSafeInteger(grams)) parsed.push(grams);
   }
-  return parsed;
+  return normalizeGramValues(parsed);
+}
+
+/** Canonicalize a gram selection: bucket sub-kilo values (legacy `?grams=450`
+ * bookmarks keep working), keep NO_GRAMS/-1 sentinels untouched, dedupe. */
+function normalizeGramValues(values: number[]): number[] {
+  const seen = new Set<number>();
+  for (const grams of values) {
+    seen.add(grams > 0 ? bucketGrams(grams) : grams);
+  }
+  return [...seen];
 }
 
 export function defaultFilters(): CatalogFilters {
@@ -107,7 +117,7 @@ export function serializeFilters(filters: CatalogFilters): Record<string, string
 
   if (filters.q !== defaults.q) params.q = filters.q;
   if (filters.roasters.length > 0) params.roasters = filters.roasters.join(",");
-  if (filters.grams.length > 0) params.grams = filters.grams.join(",");
+  if (filters.grams.length > 0) params.grams = normalizeGramValues(filters.grams).join(",");
   if (filters.category !== defaults.category) params.category = filters.category;
   if (filters.origin !== defaults.origin) params.origin = filters.origin;
   if (filters.sort !== defaults.sort) params.sort = filters.sort;
@@ -142,7 +152,10 @@ export function filterCatalog(products: Product[], filters: CatalogFilters): Pro
     if (filters.roasters.length > 0 && !filters.roasters.includes(product.store)) return false;
 
     if (filters.grams.length > 0) {
-      const match = product.grams === null ? filters.grams.includes(NO_GRAMS) : filters.grams.includes(product.grams);
+      const match =
+        product.grams === null
+          ? filters.grams.includes(NO_GRAMS)
+          : filters.grams.includes(bucketGrams(product.grams));
       if (!match) return false;
     }
 
@@ -162,7 +175,7 @@ export interface GramFacetOptions {
 export function gramFacetOptions(products: Product[], filters: CatalogFilters): GramFacetOptions {
   const pool = filterCatalog(products, { ...filters, grams: [] });
   const values = sortGramValues([
-    ...availableGrams(pool),
+    ...availableGrams(pool).map((grams) => bucketGrams(grams)),
     ...filters.grams.filter((grams) => grams > 0),
   ]);
   const hasNull = pool.some((product) => product.grams === null) || filters.grams.includes(NO_GRAMS);
