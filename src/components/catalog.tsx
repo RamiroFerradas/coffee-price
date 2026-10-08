@@ -17,6 +17,7 @@ import {
 } from "@/lib/filter-catalog";
 import type { CatalogMeta } from "@/lib/catalog";
 import { formatGrams } from "@/lib/format";
+import { PAGE_SIZE, nextVisibleCount, remainingCount } from "@/lib/pagination";
 import type { Product, StoreId } from "@/lib/types";
 import { ProductCard } from "./product-card";
 import { UpdatedBadge } from "./updated-badge";
@@ -66,6 +67,14 @@ export function Catalog({
     parseFilters(Object.fromEntries(searchParams)),
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  // Collapse to one page whenever filters/search/sort change
+  // (https://react.dev/reference/react/useState#storing-information-from-previous-renders).
+  const [prevFilters, setPrevFilters] = useState(filters);
+  if (prevFilters !== filters) {
+    setPrevFilters(filters);
+    setVisibleCount(PAGE_SIZE);
+  }
 
   const applyFilters = useCallback(
     (next: CatalogFilters) => {
@@ -251,11 +260,26 @@ export function Catalog({
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4">
-          {visible.map((product, index) => (
-            <ProductCard key={product.id} product={product} index={index} />
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4">
+            {visible.slice(0, visibleCount).map((product, index) => (
+              <ProductCard key={product.id} product={product} index={index} />
+            ))}
+          </div>
+          {remainingCount(visible.length, visibleCount) > 0 && (
+            <div className="flex justify-center pb-8">
+              <button
+                type="button"
+                onClick={() =>
+                  setVisibleCount((count) => nextVisibleCount(count, visible.length, PAGE_SIZE))
+                }
+                className="w-full rounded-full border border-line bg-surface px-6 py-2.5 text-sm font-semibold text-foreground transition-colors duration-200 hover:border-accent sm:w-auto"
+              >
+                Cargar más ({remainingCount(visible.length, visibleCount)})
+              </button>
+            </div>
+          )}
+        </>
       )}
     </section>
   );
