@@ -62,21 +62,12 @@ export const metadata: Metadata = {
   },
 };
 
-// Runs synchronously while the HTML parses, before first paint: ?theme= beats
-// localStorage, unknown/absent values fall back to espresso. Kept dependency-free.
-const THEME_BOOT_SCRIPT = `(function(){try{var v=["classic","neon","cyber","espresso"],t=null;try{var q=new URLSearchParams(location.search).get("theme");if(v.indexOf(q)>-1)t=q}catch(e){}if(t===null){try{var s=localStorage.getItem("qc-theme");if(v.indexOf(s)>-1)t=s}catch(e){}}document.documentElement.setAttribute("data-theme",t||"espresso")}catch(e){document.documentElement.setAttribute("data-theme","espresso")}})()`;
-
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es-AR"
-      data-theme="espresso"
-      suppressHydrationWarning
       className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
-      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

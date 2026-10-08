@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { getCatalog, getCatalogMeta } from "@/lib/catalog";
 import { Catalog } from "@/components/catalog";
-import { ThemeSwitcher } from "@/components/theme-switcher";
 import { STORES } from "@/scrapers/stores";
 
 function Ticker({ roasterCount }: { roasterCount: number }) {
@@ -102,7 +101,7 @@ export default async function Home() {
           </p>
           <h1 className="mt-4 font-display text-5xl font-black uppercase leading-[0.92] tracking-[-0.035em] text-foreground sm:text-7xl lg:text-8xl">
             Quiero{" "}
-            <span className="text-accent themed:inline-block themed:bg-linear-to-r themed:from-accent themed:to-accent-strong themed:bg-clip-text themed:text-transparent">
+            <span className="text-accent inline-block bg-linear-to-r from-accent to-accent-strong bg-clip-text text-transparent">
               Cafe
             </span>
           </h1>
@@ -134,8 +133,6 @@ export default async function Home() {
           </p>
         </div>
       </footer>
-
-      {process.env.NODE_ENV !== "production" && <ThemeSwitcher />}
     </div>
   );
 }

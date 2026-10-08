@@ -1,66 +1,7 @@
 @import "tailwindcss";
 
-/* Themed utilities apply only to the three futuristic themes; classic keeps its plain look. */
-@custom-variant themed ([data-theme="neon"] &, [data-theme="cyber"] &, [data-theme="espresso"] &);
-
+/* Single palette: espresso. */
 :root {
-  --background: #f5eee1;
-  --surface: #ffffff;
-  --foreground: #1b120a;
-  --muted: #6e6154;
-  --line: #e5d9c6;
-  --accent: #c04106;
-  --accent-strong: #9a3405;
-  --accent-soft: #fbe9dc;
-  --on-accent: #ffffff;
-  --shadow-glow: transparent;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #16110d;
-    --surface: #211a14;
-    --foreground: #f4ece1;
-    --muted: #ab9a86;
-    --line: #3b3126;
-    --accent: #ff7a3d;
-    --accent-strong: #ffa366;
-    --accent-soft: #2f231a;
-    --on-accent: #16110d;
-  }
-}
-
-/* Fixed palettes for the selectable themes. Declared after the media query at the same
-   specificity, so they win over prefers-color-scheme in both light and dark OS modes. */
-
-html[data-theme="neon"] {
-  --background: #07090f;
-  --surface: #0e121b;
-  --foreground: #e9edf7;
-  --muted: #8f9ab3;
-  --line: #1e2635;
-  --accent: #8b5cf6;
-  --accent-strong: #a78bfa;
-  --accent-soft: #191332;
-  /* Spec's #ffffff on #8b5cf6 measures 4.23:1 (AA fail); dark-on-violet = 4.70:1. */
-  --on-accent: #07090f;
-  --shadow-glow: 0 16px 32px -18px rgb(0 0 0 / 0.5), 0 0 28px -6px rgb(139 92 246 / 0.35);
-}
-
-html[data-theme="cyber"] {
-  --background: #04060a;
-  --surface: #0a0f14;
-  --foreground: #e6fff2;
-  --muted: #7f948c;
-  --line: #16241f;
-  --accent: #c6ff00;
-  --accent-strong: #d9ff4d;
-  --accent-soft: #121b06;
-  --on-accent: #04060a;
-  --shadow-glow: 0 16px 32px -18px rgb(0 0 0 / 0.5), 0 0 28px -6px rgb(198 255 0 / 0.3);
-}
-
-html[data-theme="espresso"] {
   --background: #100a06;
   --surface: #1a120b;
   --foreground: #f6ecdf;
@@ -70,7 +11,8 @@ html[data-theme="espresso"] {
   --accent-strong: #ffca73;
   --accent-soft: #291c10;
   --on-accent: #100a06;
-  --shadow-glow: 0 16px 32px -18px rgb(0 0 0 / 0.5), 0 0 28px -6px rgb(242 169 59 / 0.3);
+  --glow: rgba(242,169,59,.30);
+  --shadow-glow: 0 16px 32px -18px rgb(0 0 0 / 0.5), 0 0 28px -6px var(--glow);
 }
 
 @theme inline {
@@ -120,30 +62,6 @@ button:not(:disabled) {
       transparent 14px 28px
     ),
     radial-gradient(circle at 65% 30%, color-mix(in srgb, var(--accent) 18%, transparent), transparent 55%);
-}
-
-/* Static backdrop for neon/cyber: fixed, non-interactive, behind content, no layout shift. */
-[data-theme="neon"] body::before,
-[data-theme="cyber"] body::before {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-}
-
-[data-theme="neon"] body::before {
-  background-image:
-    radial-gradient(1100px 520px at 50% -12%, rgb(139 92 246 / 0.16), transparent 68%),
-    radial-gradient(760px 460px at 100% 100%, rgb(139 92 246 / 0.08), transparent 62%);
-}
-
-[data-theme="cyber"] body::before {
-  background-image:
-    linear-gradient(rgb(198 255 0 / 0.045) 1px, transparent 1px),
-    linear-gradient(90deg, rgb(198 255 0 / 0.045) 1px, transparent 1px),
-    radial-gradient(900px 480px at 50% -10%, rgb(198 255 0 / 0.06), transparent 70%);
-  background-size: 44px 44px, 44px 44px, auto;
 }
 
 /* --- Animations (CSS only) --- */

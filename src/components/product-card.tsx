@@ -95,7 +95,7 @@ export function ProductCard({
       target="_blank"
       rel="noopener noreferrer"
       style={{ animationDelay: `${Math.min(index * 60, 600)}ms` }}
-      className="group animate-card-in flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-xl themed:hover:shadow-glow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      className="group animate-card-in flex flex-col overflow-hidden rounded-3xl border border-line bg-surface shadow-sm transition-[transform,box-shadow] duration-300 hover:-translate-y-1.5 hover:shadow-xl hover:shadow-glow focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
     >
       <div className="h-44 w-full overflow-hidden">
         {product.image_url ? (
