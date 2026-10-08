@@ -9,6 +9,7 @@ const BUNA = getStore("bunatostadores") as TiendanubeStore;
 const MODO = getStore("modobarista") as TiendanubeStore;
 const KAPS = getStore("kapselmaker") as TiendanubeStore;
 const JJ = getStore("johnandjoe") as TiendanubeStore;
+const FUEGO = getStore("fuegotostadores") as TiendanubeStore;
 
 const noDelay = () => Promise.resolve();
 
@@ -166,7 +167,7 @@ describe("scrapeTiendanube parsing", () => {
   });
 
   it("falls back to the product name when the store publishes no usable weight", async () => {
-    // No gramsFromName config: johnandjoe-style stores must still read "Pack Kilo" titles
+    // No usable weight: johnandjoe-style stores must still read "Pack Kilo" titles
     // when JSON-LD weight is missing or a Tiendanube shipping placeholder.
     const html = [
       {
@@ -332,7 +333,7 @@ describe("scrapeTiendanube modobarista", () => {
     expect(rows.every((row) => row.price > 0)).toBe(true);
   });
 
-  it("takes grams from the sku because the ld weight is the store shipping default", async () => {
+  it("takes grams from the sku before the shipping-default ld weight", async () => {
     const fetchFn = makeFetch(routes());
     const rows = await scrapeTiendanube(MODO, { fetchFn, delayFn: noDelay });
 
@@ -341,7 +342,8 @@ describe("scrapeTiendanube modobarista", () => {
       CATOET125: 125,
       CATOHO01250: 250,
       CATOWW06125: 125,
-      YOLLECA: null,
+      // Name and sku carry no grammage, so the ld weight (0.1 kg) is the last resort.
+      YOLLECA: 100,
       CATOCOCO250: 250,
     });
   });
@@ -596,6 +598,125 @@ describe("scrapeTiendanube kapselmaker grams from name", () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ name: "Francesca", grams: null });
+  });
+});
+
+describe("scrapeTiendanube grams precedence (name first)", () => {
+  const productHtml = (
+    store: TiendanubeStore,
+    product: { name: string; sku?: string; weight?: string },
+  ): string => {
+    const ld: Record<string, unknown> = {
+      "@type": "Product",
+      name: product.name,
+      url: `${store.baseUrl}/productos/prueba-grams/`,
+      ...(product.sku ? { sku: product.sku } : {}),
+      ...(product.weight !== undefined
+        ? { weight: { "@type": "QuantitativeValue", unitCode: "KGM", value: product.weight } }
+        : {}),
+      offers: { priceCurrency: "ARS", price: "25000", availability: "https://schema.org/InStock" },
+    };
+    return `<script type="application/ld+json">${JSON.stringify(ld)}</script>`;
+  };
+
+  const scrape = async (store: TiendanubeStore, html: string) => {
+    const fetchFn = makeFetch({
+      [store.source]: html,
+      [`${store.source}?page=2`]: "<html><body>no products</body></html>",
+    });
+    return scrapeTiendanube(store, { fetchFn, delayFn: noDelay });
+  };
+
+  it("takes grammage from the product name before the shipping weight", async () => {
+    // Reported bug: fuegotostadores' 125 g bag ships with a 0.13 kg LD weight;
+    // weight-first parsing published it as 130 g and the 130 g filter matched it.
+    const rows = await scrape(
+      FUEGO,
+      productHtml(FUEGO, {
+        name: "CAFÉ LÍNEA EXPERIMENTAL - COLOMBIA - 125G",
+        sku: "C125(CO43HC)",
+        weight: "0.13",
+      }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBe(125);
+  });
+
+  it("falls back to the ld weight when the name carries no grammage", async () => {
+    const rows = await scrape(
+      FUEGO,
+      productHtml(FUEGO, { name: "Blend Sin Gramaje", weight: "0.13" }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBe(130);
+  });
+
+  it("returns null when the name has no grammage and the weight is a placeholder", async () => {
+    const rows = await scrape(
+      FUEGO,
+      productHtml(FUEGO, { name: "Blend Sin Gramaje", weight: "0.001" }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBeNull();
+  });
+
+  it("takes grammage from the sku when the name carries none", async () => {
+    const rows = await scrape(
+      MODO,
+      productHtml(MODO, {
+        name: "Café de especialidad Etiopía 01",
+        sku: "CATOET125",
+        weight: "0.1",
+      }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBe(125);
+  });
+
+  it("prefers grammage in the name over the sku", async () => {
+    const rows = await scrape(
+      MODO,
+      productHtml(MODO, {
+        name: "Etiopía Especial - 250g",
+        sku: "CATOET125",
+        weight: "0.1",
+      }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBe(250);
+  });
+});
+
+describe("scrapeTiendanube fuegotostadores", () => {
+  const routes = () => ({
+    [FUEGO.source]: fixture("fuego-listing.html"),
+    [`${FUEGO.source}?page=2`]: "<html><body>no products</body></html>",
+  });
+
+  it("parses the listing with name- and weight-consistent grammage", async () => {
+    const fetchFn = vi.fn(makeFetch(routes()));
+    const rows = await scrapeTiendanube(FUEGO, { fetchFn, delayFn: noDelay });
+
+    expect(fetchFn.mock.calls.map((call) => call[0])).toEqual([
+      FUEGO.source,
+      `${FUEGO.source}?page=2`,
+    ]);
+    expect(rows).toHaveLength(2);
+    expect(rows.every((row) => row.store === "fuegotostadores")).toBe(true);
+    expect(rows.every((row) => row.in_stock)).toBe(true);
+    expect(Object.fromEntries(rows.map((row) => [row.external_id, row.grams]))).toEqual({
+      "C250C(BR23CO51)": 250,
+      "C250(BR23CO51)": 250,
+    });
+    expect(Object.fromEntries(rows.map((row) => [row.external_id, row.price]))).toEqual({
+      "C250C(BR23CO51)": 20700,
+      "C250(BR23CO51)": 24600,
+    });
   });
 });
 

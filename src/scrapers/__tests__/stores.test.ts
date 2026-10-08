@@ -111,18 +111,6 @@ describe("STORES registry", () => {
     expect("gramsFromSku" in getStore("kapselmaker")).toBe(false);
   });
 
-  it("sets gramsFromName only on kapselmaker", () => {
-    const kaps = getStore("kapselmaker") as TiendanubeStore;
-    expect(kaps.gramsFromName).toBe(true);
-    expect("gramsFromSku" in kaps).toBe(false);
-    const tiendanubeStores = STORES.filter(
-      (store): store is TiendanubeStore => store.platform === "tiendanube",
-    );
-    for (const store of tiendanubeStores) {
-      expect(store.gramsFromName ?? false).toBe(store.id === "kapselmaker");
-    }
-  });
-
   it("scopes johnandjoe to the full listing and trusts the LD weights", () => {
     expect(getStore("johnandjoe")).toMatchObject({
       platform: "tiendanube",

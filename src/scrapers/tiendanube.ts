@@ -48,25 +48,18 @@ function pageUrl(config: TiendanubeStore, page: number): string {
 const PLACEHOLDER_MIN_GRAMS = 10;
 
 function gramsFor(config: TiendanubeStore, product: LdProduct, sku: string): number | null {
-  let grams: number | null = null;
-  if (config.gramsFromName) {
-    // kapselmaker's LD weight is the store shipping weight; the product name carries the real grammage.
-    grams = parseGrams(product.name ?? "");
+  // The product name is the authoritative grammage for every Tiendanube store: the LD
+  // weight is the shipping/admin weight, not the bag size (e.g. a 125 g bag ships at 0.13 kg).
+  let grams: number | null = parseGrams(product.name ?? "");
+  if (grams == null && config.gramsFromSku) {
+    // When the name carries no grammage, the SKU suffix is the real grammage for stores
+    // whose LD weight is Tiendanube's default shipping weight.
+    const match = config.gramsFromSku.exec(sku);
+    const fromSku = match ? Number(match[1]) : Number.NaN;
+    grams = Number.isFinite(fromSku) && fromSku > 0 ? fromSku : null;
   }
   if (grams == null) {
-    if (config.gramsFromSku) {
-      // When the store's LD weight is Tiendanube's default shipping weight, the SKU suffix is the real grammage.
-      const match = config.gramsFromSku.exec(sku);
-      const fromSku = match ? Number(match[1]) : Number.NaN;
-      grams = Number.isFinite(fromSku) && fromSku > 0 ? fromSku : null;
-    } else {
-      grams = gramsFromWeight(product.weight);
-    }
-  }
-  if (grams == null || grams < PLACEHOLDER_MIN_GRAMS) {
-    // Stores without gramsFromName never consult the title; fall back to it when
-    // the weight is missing or a Tiendanube shipping placeholder.
-    grams = parseGrams(product.name ?? "");
+    grams = gramsFromWeight(product.weight);
   }
   return grams != null && grams < PLACEHOLDER_MIN_GRAMS ? null : grams;
 }

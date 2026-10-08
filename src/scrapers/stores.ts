@@ -34,7 +34,6 @@ export interface TiendanubeStore extends StoreBase {
   source: string;
   pagination: TiendanubePagination;
   gramsFromSku?: RegExp;
-  gramsFromName?: boolean;
 }
 
 export interface MercadoLibreStore extends StoreBase {
@@ -136,7 +135,6 @@ export const STORES: readonly StoreConfig[] = [
     baseUrl: "https://kapselmaker.com",
     source: "https://kapselmaker.com/productos/",
     pagination: { kind: "query", param: "page" },
-    gramsFromName: true,
     installmentsPolicy: "3 cuotas sin interés desde $160.000",
     refreshMinutes: 60,
   },
