@@ -19,26 +19,23 @@ import type { CatalogMeta } from "@/lib/catalog";
 import { formatGrams } from "@/lib/format";
 import { PAGE_SIZE, nextVisibleCount, remainingCount } from "@/lib/pagination";
 import type { Product, StoreId } from "@/lib/types";
+import type { Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 import { ProductCard } from "./product-card";
 import { UpdatedBadge } from "./updated-badge";
 
-const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "price_per_kg-desc", label: "Mayor precio por kg" },
-  { value: "price_per_kg-asc", label: "Menor precio por kg" },
-  { value: "grams-desc", label: "Mayor gramaje" },
-  { value: "grams-asc", label: "Menor gramaje" },
-  { value: "price-desc", label: "Mayor precio" },
-  { value: "price-asc", label: "Menor precio" },
-  { value: "name-asc", label: "Nombre (A-Z)" },
-  { value: "roaster-asc", label: "Tostador (A-Z)" },
+const SORT_KEYS: SortKey[] = [
+  "price_per_kg-desc",
+  "price_per_kg-asc",
+  "grams-desc",
+  "grams-asc",
+  "price-desc",
+  "price-asc",
+  "name-asc",
+  "roaster-asc",
 ];
 
-const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
-  { value: "all", label: "Todos los cafés" },
-  { value: "single-origin", label: "Single origin" },
-  { value: "blend", label: "Blend" },
-  { value: "equipment", label: "Herramientas y accesorios" },
-];
+const CATEGORY_KEYS: CategoryFilter[] = ["all", "single-origin", "blend", "equipment"];
 
 const SELECT_CLASS =
   "w-full rounded-full border border-line bg-surface px-4 py-2 text-sm text-foreground transition-colors duration-200 hover:border-accent sm:w-auto";
@@ -55,13 +52,17 @@ function chipClass(active: boolean): string {
 export function Catalog({
   products,
   meta,
+  locale,
 }: {
   products: Product[];
   meta: CatalogMeta;
+  locale: Locale;
 }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
+
+  const t = getDictionary(locale).catalog;
 
   const [filters, setFilters] = useState<CatalogFilters>(() =>
     parseFilters(Object.fromEntries(searchParams)),
@@ -128,15 +129,15 @@ export function Catalog({
   };
 
   return (
-    <section aria-label="Catálogo de cafés">
+    <section aria-label={t.sectionAria}>
       <div className="-mx-4 border-b border-line bg-background px-4 pb-3 pt-3 sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-2">
           <input
             type="search"
             value={filters.q}
             onChange={(event) => applyFilters({ ...filters, q: event.target.value })}
-            placeholder="Buscar café, origen o tostador…"
-            aria-label="Buscar productos"
+            placeholder={t.searchPlaceholder}
+            aria-label={t.searchAria}
             className="w-full rounded-full border border-line bg-surface px-5 py-2.5 text-sm text-foreground transition-colors duration-200 placeholder:text-muted hover:border-accent"
           />
           <button
@@ -145,16 +146,16 @@ export function Catalog({
             aria-expanded={filtersOpen}
             className={`${filtersOpen ? "border-accent text-accent" : "border-line text-foreground"} shrink-0 rounded-full border bg-surface px-4 py-2.5 text-sm font-semibold transition-colors duration-200 md:hidden`}
           >
-            Filtros
+            {t.filters}
           </button>
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-2 text-sm text-muted">
           <span className="text-xs font-semibold uppercase tracking-[0.14em]">
             <span className="font-mono tabular-nums">{visible.length}</span>{" "}
-            {visible.length === 1 ? "producto" : "productos"}
+            {visible.length === 1 ? t.productOne : t.productMany}
           </span>
-          <UpdatedBadge updatedAt={meta.updatedAt} />
+          <UpdatedBadge updatedAt={meta.updatedAt} locale={locale} />
         </div>
 
         <div
@@ -193,34 +194,34 @@ export function Catalog({
                 aria-pressed={filters.grams.includes(NO_GRAMS)}
                 className={chipClass(filters.grams.includes(NO_GRAMS))}
               >
-                sin gramaje
+                {t.noWeight}
               </button>
             )}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
             <select
-              aria-label="Categoría"
+              aria-label={t.categoryLabel}
               value={filters.category}
               onChange={(event) =>
                 applyFilters({ ...filters, category: event.target.value as CategoryFilter })
               }
               className={SELECT_CLASS}
             >
-              {CATEGORY_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {CATEGORY_KEYS.map((value) => (
+                <option key={value} value={value}>
+                  {t.category[value]}
                 </option>
               ))}
             </select>
 
             <select
-              aria-label="País de origen"
+              aria-label={t.originLabel}
               value={filters.origin}
               onChange={(event) => applyFilters({ ...filters, origin: event.target.value })}
               className={SELECT_CLASS}
             >
-              <option value="all">Todos los países</option>
+              <option value="all">{t.allCountries}</option>
               {originOptions.map((origin) => (
                 <option key={origin} value={origin}>
                   {origin}
@@ -229,16 +230,16 @@ export function Catalog({
             </select>
 
             <select
-              aria-label="Ordenar por"
+              aria-label={t.sortLabel}
               value={filters.sort}
               onChange={(event) =>
                 applyFilters({ ...filters, sort: event.target.value as SortKey })
               }
               className={SELECT_CLASS}
             >
-              {SORT_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              {SORT_KEYS.map((value) => (
+                <option key={value} value={value}>
+                  {t.sort[value]}
                 </option>
               ))}
             </select>
@@ -248,22 +249,25 @@ export function Catalog({
 
       {visible.length === 0 ? (
         <div className="mt-6 rounded-3xl border border-dashed border-line bg-surface p-12 text-center">
-          <p className="font-display text-2xl text-foreground">
-            No encontramos cafés con esos filtros
-          </p>
+          <p className="font-display text-2xl text-foreground">{t.emptyResults}</p>
           <button
             type="button"
             onClick={() => applyFilters(defaultFilters())}
             className="mt-5 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-on-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md"
           >
-            Limpiar filtros
+            {t.clearFilters}
           </button>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-1 gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4">
             {visible.slice(0, visibleCount).map((product, index) => (
-              <ProductCard key={product.id} product={product} index={index} />
+              <ProductCard
+                key={product.id}
+                product={product}
+                index={index}
+                locale={locale}
+              />
             ))}
           </div>
           {remainingCount(visible.length, visibleCount) > 0 && (
@@ -275,7 +279,7 @@ export function Catalog({
                 }
                 className="w-full rounded-full border border-line bg-surface px-6 py-2.5 text-sm font-semibold text-foreground transition-colors duration-200 hover:border-accent sm:w-auto"
               >
-                Cargar más ({remainingCount(visible.length, visibleCount)})
+                {t.loadMore(remainingCount(visible.length, visibleCount))}
               </button>
             </div>
           )}

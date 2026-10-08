@@ -2,17 +2,8 @@ import type { ReactNode } from "react";
 import { formatArs, formatGramsLine } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { STORES } from "@/scrapers/stores";
-
-const CATEGORY_LABELS: Record<string, string> = {
-  "single-origin": "Single origin",
-  blend: "Blend",
-  equipment: "Equipo",
-};
-
-const GRIND_LABELS: Record<string, string> = {
-  "whole-bean": "En grano",
-  ground: "Molido",
-};
+import { defaultLocale, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 
 function Chip({ children }: { children: ReactNode }) {
   return (
@@ -57,15 +48,18 @@ function notesLine(raw: string): string {
 export function ProductCard({
   product,
   index = 0,
+  locale = defaultLocale,
 }: {
   product: Product;
   index?: number;
+  locale?: Locale;
 }) {
+  const labels = getDictionary(locale).productCard;
   const chips = [
     product.origin,
     product.variety,
-    product.grind !== null ? (GRIND_LABELS[product.grind] ?? product.grind) : null,
-    product.category !== null ? (CATEGORY_LABELS[product.category] ?? product.category) : null,
+    product.grind !== null ? (labels.grind[product.grind] ?? product.grind) : null,
+    product.category !== null ? (labels.category[product.category] ?? product.category) : null,
     product.process,
     product.roast_level,
     product.altitude !== null && product.altitude.length <= MAX_ALTITUDE_CHIP
@@ -80,7 +74,7 @@ export function ProductCard({
   const store = STORES.find((entry) => entry.id === product.store);
   const shippingText =
     product.free_shipping === true
-      ? (product.shipping_note ?? "Envío gratis")
+      ? (product.shipping_note ?? labels.freeShipping)
       : (product.shipping_note ?? store?.shippingPolicy ?? null);
   const installmentsText = product.installments ?? store?.installmentsPolicy ?? null;
   const benefits = [shippingText, installmentsText].filter(
@@ -150,7 +144,7 @@ export function ProductCard({
         </div>
 
         <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted transition-colors duration-200 group-hover:text-accent">
-          Ver en la tienda
+          {labels.viewOnStore}
           <span
             aria-hidden="true"
             className="inline-block transition-transform duration-300 ease-out group-hover:translate-x-1"

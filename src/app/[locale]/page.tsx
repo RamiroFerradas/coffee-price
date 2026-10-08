@@ -1,14 +1,24 @@
 import { Suspense } from "react";
+import { notFound } from "next/navigation";
 import { getCatalog, getCatalogMeta } from "@/lib/catalog";
 import { Catalog } from "@/components/catalog";
 import { STORES } from "@/scrapers/stores";
+import { isLocale, locales, type Locale } from "@/i18n/config";
+import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
+import { SITE_URL } from "@/i18n/metadata";
 
-function Ticker({ roasterCount }: { roasterCount: number }) {
+// `dynamicParams = false` is unavailable under `cacheComponents`, so unknown
+// locales are rejected by the `isLocale` guard below instead.
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }));
+}
+
+function Ticker({ roasterCount, dict }: { roasterCount: number; dict: Dictionary }) {
   const items = [
-    `${roasterCount} tostadores`,
-    "precios actualizados todos los días",
-    "precio por kilo comparable",
-    "café de especialidad, blends y equipo",
+    dict.ticker.roasters(roasterCount),
+    dict.ticker.dailyPrices,
+    dict.ticker.comparablePerKg,
+    dict.ticker.specialtyBlendsGear,
   ];
   // 4 copies per track, animated to -50% (2 copies): seamless as long as half the
   // track is wider than the viewport.
@@ -61,43 +71,48 @@ function SkeletonGrid() {
   );
 }
 
-function EmptyCatalog() {
+function EmptyCatalog({ dict }: { dict: Dictionary }) {
   return (
     <div className="mt-8 rounded-3xl border border-dashed border-line bg-surface p-12 text-center">
-      <p className="font-display text-2xl text-foreground">Todavía no hay datos</p>
-      <p className="mx-auto mt-3 max-w-md text-sm text-muted">
-        Esperá al próximo scrapeo: los precios se actualizan solos todos los días.
-      </p>
+      <p className="font-display text-2xl text-foreground">{dict.emptyCatalog.title}</p>
+      <p className="mx-auto mt-3 max-w-md text-sm text-muted">{dict.emptyCatalog.body}</p>
     </div>
   );
 }
 
-const WEBSITE_JSON_LD = {
-  "@context": "https://schema.org",
-  "@type": "WebSite",
-  name: "Quiero Café",
-  url: "https://quierocafe.vercel.app",
-  inLanguage: "es-AR",
-  description:
-    "Comparador de precios de café de especialidad de tostadores argentinos, con precio por kilo comparable.",
-};
+function websiteJsonLd(locale: Locale, siteUrl: string) {
+  const { jsonLd } = getDictionary(locale).meta;
+  return {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: jsonLd.name,
+    url: siteUrl,
+    inLanguage: jsonLd.inLanguage,
+    description: jsonLd.description,
+  };
+}
 
-export default async function Home() {
+export default async function LocalePage({ params }: PageProps<"/[locale]">) {
+  const { locale } = await params;
+  if (!isLocale(locale)) notFound();
+
+  const dict = getDictionary(locale);
   const products = await getCatalog();
   const meta = await getCatalogMeta();
   const roasterCount = STORES.length;
+  const jsonLd = websiteJsonLd(locale, SITE_URL);
 
   return (
     <div className="flex min-h-screen flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(WEBSITE_JSON_LD) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <header className="border-b border-line">
-        <Ticker roasterCount={roasterCount} />
+        <Ticker roasterCount={roasterCount} dict={dict} />
         <div className="mx-auto w-full max-w-6xl px-4 py-12 sm:px-6 sm:py-16">
           <p className="text-xs font-bold uppercase tracking-[0.3em] text-accent">
-            Comparador de precios
+            {dict.hero.eyebrow}
           </p>
           <h1 className="mt-4 font-display text-5xl font-black uppercase leading-[0.92] tracking-[-0.035em] text-foreground sm:text-7xl lg:text-8xl">
             Quiero{" "}
@@ -106,18 +121,17 @@ export default async function Home() {
             </span>
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-muted sm:text-lg">
-            Precios de café de especialidad de {roasterCount} tostadores argentinos, directo
-            desde sus tiendas.
+            {dict.hero.description(roasterCount)}
           </p>
         </div>
       </header>
 
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-12 sm:px-6">
         {products.length === 0 ? (
-          <EmptyCatalog />
+          <EmptyCatalog dict={dict} />
         ) : (
           <Suspense fallback={<SkeletonGrid />}>
-            <Catalog products={products} meta={meta} />
+            <Catalog products={products} meta={meta} locale={locale} />
           </Suspense>
         )}
       </main>
@@ -128,8 +142,7 @@ export default async function Home() {
             Quiero Cafe
           </p>
           <p className="max-w-2xl text-sm leading-relaxed text-muted">
-            Los precios se actualizan solos todos los días, directo desde las tiendas de cada
-            tostador, así siempre comparás el último valor por kilo.
+            {dict.footer.description}
           </p>
         </div>
       </footer>

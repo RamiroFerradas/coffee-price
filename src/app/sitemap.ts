@@ -1,12 +1,14 @@
 import type { MetadataRoute } from "next";
+import { locales } from "@/i18n/config";
+
+const SITE_URL = "https://quierocafe.vercel.app";
 
 export default function sitemap(): MetadataRoute.Sitemap {
-  return [
-    {
-      url: "https://quierocafe.vercel.app",
-      lastModified: new Date(),
-      changeFrequency: "daily",
-      priority: 1,
-    },
-  ];
+  const lastModified = new Date();
+  return locales.map((locale) => ({
+    url: `${SITE_URL}/${locale}`,
+    lastModified,
+    changeFrequency: "daily",
+    priority: 1,
+  }));
 }

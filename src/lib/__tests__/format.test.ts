@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/lib/types";
 import {
+  JUST_NOW_LABEL,
   availableGrams,
+  bucketGrams,
   formatArs,
   formatGrams,
   formatGramsLine,
@@ -120,6 +122,35 @@ describe("formatRelativeTime", () => {
     expect(formatRelativeTime("2026-06-15T11:58:30.000Z", now)).toBe("hace 1 min");
     expect(formatRelativeTime("2026-06-14T12:30:00.000Z", now)).toBe("hace 23 h");
   });
+
+  it("returns just now for less than a minute in English", () => {
+    expect(formatRelativeTime("2026-06-15T11:59:30.000Z", now, "en")).toBe("just now");
+    expect(formatRelativeTime("2026-06-15T12:00:30.000Z", now, "en")).toBe("just now");
+  });
+
+  it("returns English minutes, hours and days", () => {
+    expect(formatRelativeTime("2026-06-15T11:55:00.000Z", now, "en")).toBe("5 min. ago");
+    expect(formatRelativeTime("2026-06-15T10:00:00.000Z", now, "en")).toBe("2 hr. ago");
+    expect(formatRelativeTime("2026-06-12T12:00:00.000Z", now, "en")).toBe("3 days ago");
+    expect(formatRelativeTime("2026-06-15T11:00:00.000Z", now, "en")).toBe("1 hr. ago");
+    expect(formatRelativeTime("2026-06-14T12:30:00.000Z", now, "en")).toBe("23 hr. ago");
+  });
+
+  it("keeps es as the default locale", () => {
+    expect(formatRelativeTime("2026-06-15T11:55:00.000Z", now)).toBe("hace 5 min");
+    expect(formatRelativeTime("2026-06-15T11:55:00.000Z", now, "es")).toBe("hace 5 min");
+  });
+});
+
+describe("JUST_NOW_LABEL", () => {
+  it("mirrors the sentinel each locale produces", () => {
+    const now = new Date("2026-06-15T12:00:00.000Z");
+    for (const locale of ["es", "en"] as const) {
+      expect(formatRelativeTime("2026-06-15T11:59:30.000Z", now, locale)).toBe(
+        JUST_NOW_LABEL[locale],
+      );
+    }
+  });
 });
 
 describe("sortGramValues", () => {
@@ -129,6 +160,41 @@ describe("sortGramValues", () => {
 
   it("deduplicates and sorts unsorted input descending", () => {
     expect(sortGramValues([250, 1000, 250, 125, 1000])).toEqual([1000, 250, 125]);
+  });
+});
+
+describe("bucketGrams", () => {
+  const cases: Array<[number, number]> = [
+    [60, 100],
+    [125, 125],
+    [130, 125],
+    [175, 125],
+    [180, 125],
+    [250, 250],
+    [400, 500],
+    [450, 500],
+    [480, 500],
+    [600, 500],
+    [700, 750],
+    [750, 750],
+    [900, 750],
+    [999, 750],
+    [1000, 1000],
+    [2500, 2500],
+    [5000, 5000],
+  ];
+
+  it.each(cases)("maps %i g to %i g", (input, expected) => {
+    expect(bucketGrams(input)).toBe(expected);
+  });
+
+  it("keeps null grams as null", () => {
+    expect(bucketGrams(null)).toBeNull();
+  });
+
+  it("resolves ties to the larger bucket", () => {
+    expect(bucketGrams(375)).toBe(500);
+    expect(bucketGrams(625)).toBe(750);
   });
 });
 

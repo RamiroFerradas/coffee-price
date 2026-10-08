@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { formatRelativeTime } from "@/lib/format";
+import { JUST_NOW_LABEL, formatRelativeTime } from "@/lib/format";
+import { defaultLocale, type Locale } from "@/i18n/config";
+import { getDictionary } from "@/i18n/dictionaries";
 
-export function UpdatedBadge({ updatedAt }: { updatedAt: string | null }) {
+export function UpdatedBadge({
+  updatedAt,
+  locale = defaultLocale,
+}: {
+  updatedAt: string | null;
+  locale?: Locale;
+}) {
   const [now, setNow] = useState<Date | null>(null);
 
   useEffect(() => {
@@ -15,8 +23,10 @@ export function UpdatedBadge({ updatedAt }: { updatedAt: string | null }) {
 
   if (!updatedAt || !now) return null;
 
-  const relative = formatRelativeTime(updatedAt, now);
-  const text = relative === "recién" ? "Recién actualizado" : `Actualizado ${relative}`;
+  const labels = getDictionary(locale).updatedBadge;
+  const relative = formatRelativeTime(updatedAt, now, locale);
+  const text =
+    relative === JUST_NOW_LABEL[locale] ? labels.justUpdated : labels.updated(relative);
 
   return (
     <span className="inline-flex items-center gap-1.5 rounded-full border border-line bg-surface/80 px-3 py-1 text-xs text-muted backdrop-blur">
