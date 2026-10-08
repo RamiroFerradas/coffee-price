@@ -1,7 +1,34 @@
 const GRAMS_PATTERN =
-  /(\d{1,3}(?:[.,]\d{3})+|\d+(?:[.,]\d+)?)\s*(kilogramos?|kilograms?|kilos?|kgs?|gramos?|grams?|gramo|grs?|g)\b/i;
+  /(\d{1,3}(?:[.,]\d{3})+|\d+(?:[.,]\d+)?)\s*(kilogramos?|kilograms?|kilos?|kgs?|gramos?|grams?|grms?|gramo|grs?|g)\b/i;
 
-export function parseGrams(text: string): number | null {
+const PACK_PATTERN =
+  /pack\s*[x×]\s*(\d{1,2})\b|pack\s+(\d{1,2})\s*(?:uds|unidades|units?|cajas?)\b/i;
+
+const CUARTOS_PATTERN =
+  /(\d{1,2}|uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+cuartos?\b/i;
+
+const WORD_KILOS_PATTERN =
+  /\b(uno|dos|tres|cuatro|cinco|seis|siete|ocho|nueve|diez)\s+kilos?\b/i;
+
+const PACK_KILO_PATTERN = /\bpack\s+kilos?\b/i;
+
+// "kilos?" alone would miss the "Kg" abbreviation used by MercadoLibre titles.
+const X_KG_PATTERN = /\b[x×]\s*(?:kgs?|kilos?)\b/i;
+
+const WORD_NUMBERS: Readonly<Record<string, number>> = {
+  uno: 1,
+  dos: 2,
+  tres: 3,
+  cuatro: 4,
+  cinco: 5,
+  seis: 6,
+  siete: 7,
+  ocho: 8,
+  nueve: 9,
+  diez: 10,
+};
+
+function parseUnitGrams(text: string): number | null {
   const match = GRAMS_PATTERN.exec(text);
   if (!match) return null;
 
@@ -14,6 +41,35 @@ export function parseGrams(text: string): number | null {
   const unit = match[2].toLowerCase();
   const multiplier = unit.startsWith("k") ? 1000 : 1;
   return Math.round(value * multiplier);
+}
+
+function wordCount(token: string): number {
+  const word = WORD_NUMBERS[token.toLowerCase()];
+  return word ?? Number(token);
+}
+
+function baseGrams(text: string): number | null {
+  const unit = parseUnitGrams(text);
+  if (unit != null) return unit;
+
+  const cuartos = CUARTOS_PATTERN.exec(text);
+  if (cuartos) return wordCount(cuartos[1]) * 250;
+
+  const kilos = WORD_KILOS_PATTERN.exec(text);
+  if (kilos) return wordCount(kilos[1]) * 1000;
+
+  if (PACK_KILO_PATTERN.test(text)) return 1000;
+  if (X_KG_PATTERN.test(text)) return 1000;
+
+  return null;
+}
+
+export function parseGrams(text: string): number | null {
+  const pack = PACK_PATTERN.exec(text);
+  const base = baseGrams(text);
+  if (!pack) return base;
+  if (base == null) return null;
+  return base * wordCount(pack[1] ?? pack[2]);
 }
 
 export function parseArsPrice(raw: string | number): number | null {

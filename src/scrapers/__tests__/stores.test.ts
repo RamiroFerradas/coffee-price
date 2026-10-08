@@ -1,15 +1,20 @@
 import { describe, expect, it } from "vitest";
 import type { StoreId } from "@/lib/types";
-import { STORES, getStore } from "../stores";
+import { STORES, getStore, type TiendanubeStore } from "../stores";
 
 describe("STORES registry", () => {
   it("contains one config per store id", () => {
     expect(STORES.map((s) => s.id).sort()).toEqual([
       "bunatostadores",
       "cafedelirante",
+      "drupa",
       "flatnwhite",
       "fuegotostadores",
       "indigoroasters",
+      "indiosverdes",
+      "johnandjoe",
+      "kapselmaker",
+      "modobarista",
       "momotostadores",
     ] satisfies StoreId[]);
   });
@@ -34,21 +39,25 @@ describe("STORES registry", () => {
     });
   });
 
-  it("configures flatnwhite as woocommerce-html against the product sitemap", () => {
+  it("configures flatnwhite as woocommerce-html scoped to the coffee archive", () => {
     const store = getStore("flatnwhite");
     expect(store.platform).toBe("woocommerce-html");
     expect(store).toMatchObject({
       roaster: "Flat & White",
       baseUrl: "https://flatnwhite.com",
       refreshMinutes: 360,
-      sitemapUrl: "https://flatnwhite.com/product-sitemap.xml",
+      discovery: {
+        kind: "archive",
+        listingUrl: "https://flatnwhite.com/cafe-de-especialidad-flatwhite-argentina/",
+      },
     });
     if (store.platform === "woocommerce-html") {
-      expect(store.requestDelayMs).toBeGreaterThanOrEqual(1000);
+      // robots.txt: User-agent: * / Crawl-delay: 10
+      expect(store.requestDelayMs).toBeGreaterThanOrEqual(10_000);
     }
   });
 
-  it("configures the four tiendanube stores with their pagination styles", () => {
+  it("configures the tiendanube stores with their pagination styles", () => {
     expect(getStore("indigoroasters")).toMatchObject({
       platform: "tiendanube",
       roaster: "Indigo Coffee Roasters",
@@ -68,6 +77,61 @@ describe("STORES registry", () => {
       roaster: "Momo Tostadores",
       pagination: { kind: "path" },
     });
+    expect(getStore("modobarista")).toMatchObject({
+      platform: "tiendanube",
+      pagination: { kind: "query", param: "page" },
+    });
+    expect(getStore("kapselmaker")).toMatchObject({
+      platform: "tiendanube",
+      pagination: { kind: "query", param: "page" },
+    });
+    expect(getStore("johnandjoe")).toMatchObject({
+      platform: "tiendanube",
+      pagination: { kind: "query", param: "page" },
+    });
+  });
+
+  it("scopes modobarista to the specialty category and kapselmaker to the full listing", () => {
+    expect(getStore("modobarista")).toMatchObject({
+      platform: "tiendanube",
+      roaster: "Modo Barista",
+      baseUrl: "https://www.modobarista.com",
+      source: "https://www.modobarista.com/cafe-especialidad/",
+      refreshMinutes: 60,
+    });
+    expect(getStore("kapselmaker")).toMatchObject({
+      platform: "tiendanube",
+      roaster: "Kapselmaker",
+      baseUrl: "https://kapselmaker.com",
+      source: "https://kapselmaker.com/productos/",
+      refreshMinutes: 60,
+    });
+    const modo = getStore("modobarista") as TiendanubeStore;
+    expect(modo.gramsFromSku).toBeInstanceOf(RegExp);
+    expect("gramsFromSku" in getStore("kapselmaker")).toBe(false);
+  });
+
+  it("sets gramsFromName only on kapselmaker", () => {
+    const kaps = getStore("kapselmaker") as TiendanubeStore;
+    expect(kaps.gramsFromName).toBe(true);
+    expect("gramsFromSku" in kaps).toBe(false);
+    const tiendanubeStores = STORES.filter(
+      (store): store is TiendanubeStore => store.platform === "tiendanube",
+    );
+    for (const store of tiendanubeStores) {
+      expect(store.gramsFromName ?? false).toBe(store.id === "kapselmaker");
+    }
+  });
+
+  it("scopes johnandjoe to the full listing and trusts the LD weights", () => {
+    expect(getStore("johnandjoe")).toMatchObject({
+      platform: "tiendanube",
+      roaster: "John & Joe",
+      baseUrl: "https://johnandjoe.com.ar",
+      source: "https://johnandjoe.com.ar/productos/",
+      refreshMinutes: 60,
+    });
+    expect("gramsFromSku" in getStore("johnandjoe")).toBe(false);
   });
 
   it("points tiendanube sources at the real listing paths", () => {
@@ -83,9 +147,74 @@ describe("STORES registry", () => {
     expect(getStore("fuegotostadores")).toMatchObject({
       source: "https://fuegotostadores.com/productos/",
     });
+    expect(getStore("johnandjoe")).toMatchObject({
+      source: "https://johnandjoe.com.ar/productos/",
+    });
+  });
+
+  it("configures the mercadolibre storefront stores", () => {
+    expect(getStore("indiosverdes")).toMatchObject({
+      platform: "mercadolibre",
+      roaster: "Café Indios Verdes",
+      baseUrl: "https://listado.mercadolibre.com.ar/tienda/cafe-indios-verdes/",
+      source: "https://listado.mercadolibre.com.ar/tienda/cafe-indios-verdes/",
+      refreshMinutes: 360,
+      requestDelayMs: 3000,
+    });
+    expect(getStore("drupa")).toMatchObject({
+      platform: "mercadolibre",
+      roaster: "Drupa",
+      source: "https://www.mercadolibre.com.ar/pagina/tiendafundador",
+      refreshMinutes: 360,
+      requestDelayMs: 3000,
+    });
   });
 
   it("throws for unknown store ids", () => {
     expect(() => getStore("nope" as StoreId)).toThrow();
+  });
+
+  it("publishes the research-verified per-store shipping policies", () => {
+    expect(getStore("indigoroasters")).toMatchObject({
+      shippingPolicy: "Envíos gratis en 48 hs",
+    });
+    expect(getStore("momotostadores")).toMatchObject({
+      shippingPolicy: "Envío gratis desde $77.000",
+      installmentsPolicy: "3 cuotas sin interés",
+    });
+    expect(getStore("johnandjoe")).toMatchObject({
+      shippingPolicy:
+        "Envío gratis CABA y GBA desde $105.000 · resto del país desde $135.000",
+    });
+    expect(getStore("modobarista")).toMatchObject({
+      shippingPolicy: "Envío gratis desde $150.000",
+    });
+    expect(getStore("flatnwhite")).toMatchObject({
+      shippingPolicy: "Envío gratis desde $90.000",
+    });
+    expect(getStore("bunatostadores")).toMatchObject({
+      installmentsPolicy: "3 cuotas sin interés desde $130.000",
+    });
+    expect(getStore("kapselmaker")).toMatchObject({
+      installmentsPolicy: "3 cuotas sin interés desde $160.000",
+    });
+  });
+
+  it("leaves stores without a published policy unconfigured", () => {
+    const bare: StoreId[] = [
+      "cafedelirante",
+      "fuegotostadores",
+      "indiosverdes",
+      "drupa",
+    ];
+    for (const id of bare) {
+      const store = getStore(id);
+      expect(store.shippingPolicy).toBeUndefined();
+      expect(store.installmentsPolicy).toBeUndefined();
+    }
+    expect(getStore("indigoroasters").installmentsPolicy).toBeUndefined();
+    expect(getStore("flatnwhite").installmentsPolicy).toBeUndefined();
+    expect(getStore("modobarista").installmentsPolicy).toBeUndefined();
+    expect(getStore("johnandjoe").installmentsPolicy).toBeUndefined();
   });
 });

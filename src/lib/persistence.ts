@@ -54,6 +54,14 @@ export function toRow(store: StoreId, raw: RawProduct, fetchedAt: Date): Product
     grams: raw.grams ?? null,
     price: raw.price,
     in_stock: raw.in_stock ?? true,
+    free_shipping: raw.free_shipping ?? null,
+    shipping_note: raw.shipping_note ?? null,
+    installments: raw.installments ?? null,
+    tasting_notes: raw.tasting_notes ?? null,
+    process: raw.process ?? null,
+    roast_level: raw.roast_level ?? null,
+    altitude: raw.altitude ?? null,
+    score: raw.score ?? null,
     fetched_at: fetchedAt.toISOString(),
   };
 }

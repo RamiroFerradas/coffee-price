@@ -11,10 +11,12 @@ interface WooPrices {
 interface WooAttributeTerm {
   name?: string;
   slug?: string;
+  default?: boolean;
 }
 
 interface WooAttribute {
   name?: string;
+  taxonomy?: string;
   terms?: WooAttributeTerm[];
 }
 
@@ -35,6 +37,7 @@ interface WooProduct {
   variations?: WooVariationRef[];
   images?: { src?: string }[];
   categories?: { name?: string }[];
+  short_description?: string;
 }
 
 export interface WooApiScrapeDeps {
@@ -53,6 +56,14 @@ function baseExternalId(product: WooProduct): string {
   if (sku) return sku;
   if (product.slug) return product.slug;
   return String(product.id ?? "");
+}
+
+const FREE_SHIPPING_THRESHOLD = /MAYORES\s*A\s*\$?\s*([\d.]+)/i;
+
+function shippingNoteFromDescription(text?: string): string | null {
+  if (!text) return null;
+  const threshold = FREE_SHIPPING_THRESHOLD.exec(text.replace(/<[^>]+>/g, ""))?.[1];
+  return threshold ? `Envío gratis desde $${threshold}` : null;
 }
 
 function buildRow(
@@ -77,6 +88,9 @@ function buildRow(
     image_url: fields.image_url,
     grams: fields.grams,
     in_stock: fields.in_stock,
+    free_shipping: null,
+    shipping_note: shippingNoteFromDescription(product.short_description),
+    installments: null,
   };
 }
 
@@ -134,13 +148,27 @@ async function expandWeights(
   return rows.length > 0 ? rows : null;
 }
 
+function weightAttribute(product: WooProduct): WooAttribute | undefined {
+  return (product.attributes ?? []).find(
+    (attribute) =>
+      /peso/i.test(attribute.name ?? "") ||
+      /peso/i.test(attribute.taxonomy ?? "") ||
+      (attribute.terms ?? []).some((term) => parseGrams(term.name ?? "") != null),
+  );
+}
+
+function gramsFromAttribute(attribute?: WooAttribute): number | null {
+  const terms = attribute?.terms ?? [];
+  const parseable = (term: WooAttributeTerm) => parseGrams(term.name ?? "") != null;
+  const preferred = terms.find((term) => term.default && parseable(term)) ?? terms.find(parseable);
+  return preferred ? parseGrams(preferred.name ?? "") : null;
+}
+
 function parentRow(config: WooApiStore, product: WooProduct, peso?: WooAttribute): RawProduct | null {
   const price = product.prices ? parseArsPrice(product.prices.price ?? "") : null;
   if (price == null || price <= 0) return null;
 
-  const terms = peso?.terms ?? [];
-  const grams =
-    terms.length === 1 ? parseGrams(terms[0].name ?? "") : null;
+  const grams = gramsFromAttribute(peso);
 
   return buildRow(config, product, {
     external_id: baseExternalId(product),
@@ -167,9 +195,7 @@ export async function scrapeWooApi(
     if (!product || product.is_in_stock === false) continue;
     if (isExcluded(product, config.excludeCategories)) continue;
 
-    const peso = (product.attributes ?? []).find((attribute) =>
-      /peso/i.test(attribute.name ?? ""),
-    );
+    const peso = weightAttribute(product);
     const expanded = peso
       ? await expandWeights(config, product, peso, detailBase, fetchFn)
       : null;

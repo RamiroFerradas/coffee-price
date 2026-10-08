@@ -12,7 +12,7 @@ create table if not exists products (
   grind        text,
   grams        int,
   price        int not null,
-  price_per_kg int generated always as (price * 1000 / nullif(grams, 0)) stored,
+  price_per_kg int generated always as (trunc(price::numeric * 1000 / nullif(grams, 0))::int) stored,
   in_stock     boolean not null default true,
   fetched_at   timestamptz not null default now(),
   unique (store, external_id)

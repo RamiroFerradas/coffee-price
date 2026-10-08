@@ -65,6 +65,56 @@ describe("parseGrams", () => {
   it("returns null for an empty string", () => {
     expect(parseGrams("")).toBeNull();
   });
+
+  it("multiplies a pack count by the listed unit weight", () => {
+    expect(parseGrams("Pack X 3 Uds. Café Fundador Amabile Molido X 250 Grs")).toBe(750);
+  });
+
+  it("multiplies a trailing pack count after the unit weight", () => {
+    expect(parseGrams("Café Indios Verdes Promo Variedades 250 g pack x 5")).toBe(1250);
+  });
+
+  // "X Kg" (×1 kg) plus a pack count: 4 × 1 kg.
+  it("multiplies a pack count by a bare 'X Kg' unit weight", () => {
+    expect(parseGrams("Café Fundador Amabile Molido X Kg - Pack 4 Unidades")).toBe(4000);
+  });
+
+  it("treats 'X Kg' in a product name as one kilo", () => {
+    expect(parseGrams("Café Fundador Elite X Kg En Grano")).toBe(1000);
+  });
+
+  it("keeps 'Doy pack 250 grs.' at 250 grams", () => {
+    expect(parseGrams("Colombia Tolima - Doy pack 250 grs.")).toBe(250);
+  });
+
+  // Tiendanube names encode the kilo pack without a digit ("…- Pack Kilo").
+  it("treats 'Pack Kilo' in a product name as one kilo", () => {
+    expect(parseGrams("Colombia Castillo - Pack Kilo")).toBe(1000);
+    expect(parseGrams("Colombia Tolima - Pack Kilo")).toBe(1000);
+  });
+
+  it("keeps the digit path winning over 'Pack Kilo'", () => {
+    expect(parseGrams("Pack 2 Kilos")).toBe(2000);
+  });
+
+  it("converts cuartos to quarter-kilos", () => {
+    expect(parseGrams("Café Colombia - Brasil - Ristretto - Especialidad. 5 Cuartos")).toBe(1250);
+    expect(parseGrams("Promo Variedades! Cuatro Cuartos Kilos! Brasil/colombia")).toBe(1000);
+    expect(parseGrams("Promo Degustación! Tres Cuartos Kilos De Café De Brasil!")).toBe(750);
+  });
+
+  it("converts spelled-out kilos", () => {
+    expect(parseGrams("Café Colombia - Brasil - Café De Especialidad - Tres Kilos!")).toBe(3000);
+  });
+
+  it("parses the 'Grms' spelling", () => {
+    expect(parseGrams("Café De Costa Rica - Tarrazu - Especialidad - (500 Grms)")).toBe(500);
+    expect(parseGrams("Café De Brasil - Sul De Minas (250 Grms)")).toBe(250);
+  });
+
+  it("returns null for unlisted size words like '4 Medios'", () => {
+    expect(parseGrams("Café Colombia - Brasil - Ristretto - 4 Medios!")).toBeNull();
+  });
 });
 
 describe("parseArsPrice", () => {

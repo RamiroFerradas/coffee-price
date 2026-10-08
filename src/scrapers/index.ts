@@ -1,6 +1,7 @@
 import type { RawProduct, StoreId } from "@/lib/types";
 import { enrich } from "./enrich";
 import type { FetchFn } from "./http";
+import { scrapeMercadoLibre } from "./mercadolibre";
 import { scrapeTiendanube } from "./tiendanube";
 import { getStore } from "./stores";
 import { scrapeWooApi } from "./woocommerce-api";
@@ -23,6 +24,9 @@ export async function scrapeStore(id: StoreId, deps: ScrapeDeps = {}): Promise<R
       break;
     case "tiendanube":
       rows = await scrapeTiendanube(config, deps);
+      break;
+    case "mercadolibre":
+      rows = await scrapeMercadoLibre(config, deps);
       break;
   }
   return rows.map(enrich);

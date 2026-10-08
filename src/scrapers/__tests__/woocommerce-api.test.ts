@@ -37,7 +37,7 @@ describe("scrapeWooApi", () => {
     expect(summary).toEqual([
       { id: "104020001-4020002-1-1000", grams: 1000, price: 149900 },
       { id: "104020001-4020002-1-250", grams: 250, price: 42900 },
-      { id: "105010000-3-1-10", grams: null, price: 24000 },
+      { id: "105010000-3-1-10", grams: 250, price: 24000 },
       { id: "105010000-1000", grams: 1000, price: 74000 },
       { id: "105010000-250", grams: 250, price: 20900 },
       { id: "105010000-3000", grams: 3000, price: 194900 },
@@ -80,14 +80,15 @@ describe("scrapeWooApi", () => {
     const rows = await scrapeWooApi(config(), { fetchFn });
     expect(rows).toHaveLength(3);
     const maragogype = rowsByName(rows, "Maragogype")[0];
+    // No default weight term: the first parseable one ("1 Kilo") wins.
     expect(maragogype).toMatchObject({
       external_id: "104020001-4020002-1",
-      grams: null,
+      grams: 1000,
       price: 42900,
       in_stock: true,
     });
     const blend = rowsByName(rows, "Blend de la Casa")[0];
-    expect(blend).toMatchObject({ external_id: "105010000", grams: null, price: 20900 });
+    expect(blend).toMatchObject({ external_id: "105010000", grams: 250, price: 20900 });
   });
 
   it("parses grams from a single weight term on parent-level rows", async () => {
@@ -113,6 +114,55 @@ describe("scrapeWooApi", () => {
     const rows = await scrapeWooApi(config(), { fetchFn });
     expect(rows).toHaveLength(1);
     expect(rows[0]).toMatchObject({ external_id: "SINGLE-1", grams: 250, price: 24000 });
+  });
+
+  it("takes the default weight term on parent rows that also carry other attributes", async () => {
+    const molienda = {
+      name: "Elegí tu Molienda",
+      taxonomy: "pa_elegi-tu-molienda",
+      has_variations: true,
+      terms: [
+        { id: 1, name: "En Grano", slug: "en-grano" },
+        { id: 2, name: "Molido Filtro", slug: "molido-filtro" },
+      ],
+    };
+    const withPeso = {
+      id: 900,
+      sku: "MULTI-1",
+      slug: "drip-multi",
+      name: "Drip Coffee Mix cafés",
+      prices: { price: "24000" },
+      attributes: [
+        molienda,
+        {
+          name: "Elegí el Peso",
+          taxonomy: "pa_elegi-el-peso",
+          has_variations: true,
+          terms: [
+            { id: 11, name: "1 Kilo", slug: "1-kilo" },
+            { id: 12, name: "250 Gr.", slug: "250-gr", default: true },
+          ],
+        },
+      ],
+      variations: [],
+      is_in_stock: true,
+    };
+    const grindOnly = {
+      id: 901,
+      sku: "GRIND-1",
+      slug: "blend-molido",
+      name: "Blend Solo Molienda",
+      prices: { price: "18000" },
+      attributes: [molienda],
+      variations: [],
+      is_in_stock: true,
+    };
+    const fetchFn = makeFetch({ [LIST_URL]: [withPeso, grindOnly] });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows).toHaveLength(2);
+    expect(rowsByName(rows, "Drip Coffee Mix")[0].grams).toBe(250);
+    expect(rowsByName(rows, "Blend Solo Molienda")[0].grams).toBeNull();
   });
 
   it("skips out-of-stock products without fetching variations", async () => {
@@ -142,5 +192,93 @@ describe("scrapeWooApi", () => {
     const prices = rows.map((row) => row.price);
     expect(prices).toContain(42900);
     expect(prices).not.toContain(429);
+  });
+
+  it("reads prices.price as the current price when regular_price is higher", async () => {
+    const discounted = {
+      id: 999001,
+      name: "Café En Oferta",
+      slug: "cafe-en-oferta",
+      permalink: "https://cafedelirante.com.ar/tienda/cafe/cafe-en-oferta/",
+      sku: "OFERTA-250",
+      is_in_stock: true,
+      prices: {
+        price: "20000",
+        regular_price: "25000",
+        sale_price: "20000",
+        currency_minor_unit: 0,
+      },
+    };
+    const fetchFn = makeFetch({ [LIST_URL]: [discounted] });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ external_id: "OFERTA-250", price: 20000 });
+  });
+
+  it("turns the free-shipping threshold in short_description into a shipping note", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        {
+          ...base,
+          variations: [],
+          sku: "THRESHOLD-1",
+          short_description: "<p>GRATIS EN COMPRAS MAYORES A $70.000</p>",
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      shipping_note: "Envío gratis desde $70.000",
+      free_shipping: null,
+      installments: null,
+    });
+  });
+
+  it("keeps the dots of a thousands-separated threshold", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        { ...base, variations: [], sku: "THRESHOLD-2", short_description: "GRATIS EN COMPRAS MAYORES A $80.000" },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows[0].shipping_note).toBe("Envío gratis desde $80.000");
+  });
+
+  it("joins a threshold the shop splits across inline tags", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        {
+          ...base,
+          variations: [],
+          sku: "THRESHOLD-3",
+          short_description:
+            '<p>Envíos a todo el país.</p><p><span style="color: #192951"><strong>GRATIS EN COMPRAS MAYORES A $70</strong></span><span style="color: #192951"><strong>.000</strong></span></p>',
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows[0].shipping_note).toBe("Envío gratis desde $70.000");
+  });
+
+  it("leaves the shipping fields null when short_description carries no threshold", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [{ ...base, variations: [], sku: "NO-THRESHOLD", short_description: "<p>Tostado lunes</p>" }],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows[0]).toMatchObject({
+      shipping_note: null,
+      free_shipping: null,
+      installments: null,
+    });
   });
 });

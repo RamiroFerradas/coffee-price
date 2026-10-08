@@ -1,0 +1,3 @@
+{
+  "crons": [{ "path": "/api/scrape?all=1", "schedule": "0 14 * * *" }]
+}

@@ -1,6 +1,6 @@
 # coffee-price
 
-Argentine specialty-coffee price aggregator. It collects product listings from Argentine specialty coffee roasters (Café Delirante, Flat&White, Indigo Roasters, Momo Tostadores, Buna Tostadores, Fuego Tostadores), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. External cron scrapers run hourly and upsert rows; the web UI reads them back.
+Argentine specialty-coffee price aggregator. It collects product listings from 11 Argentine stores (specialty roasters plus their MercadoLibre shops), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. A daily Vercel cron (plus on-demand runs) scrapes and upserts rows; the web UI reads them back.
 
 ## Stack
 
@@ -8,7 +8,7 @@ Argentine specialty-coffee price aggregator. It collects product listings from A
 - **Supabase Postgres** as the datastore (service-role writes from the server, public read via RLS policy)
 - **Vitest** for unit tests
 - **Tailwind CSS 4** + ESLint
-- Deployed on **Vercel**, scraped hourly by an **external cron**
+- Deployed on **Vercel**, scraped daily by a built-in cron (and on demand)
 
 ## Setup
 
@@ -39,7 +39,7 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/0001_init.sql
 | --- | --- | --- |
 | `SUPABASE_URL` | Supabase → Settings → API → Project URL | Supabase project endpoint used by the server client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role key | Server-only key that bypasses RLS for scraper writes |
-| `CRON_SECRET` | You generate it | Shared secret the external cron must present to trigger scraping |
+| `CRON_SECRET` | You generate it | Shared secret the cron (built-in Vercel or manual/external) must present to trigger scraping |
 
 ## Deploy
 
@@ -51,7 +51,7 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/0001_init.sql
    curl -H "x-cron-secret: $CRON_SECRET" "https://<app>.vercel.app/api/scrape?all=1"
    ```
 
-4. **cron-job.org** (free, Vercel's Hobby cron is daily-only): sign up → New cronjob →
+4. *(Optional)* **cron-job.org** for hourly refreshes — the built-in Vercel cron runs daily (Hobby plan limit):
    - URL: `https://<app>.vercel.app/api/scrape`
    - Method: GET · extra header: `x-cron-secret: <your CRON_SECRET>`
    - Schedule: every hour (custom `0 * * * *`)
@@ -81,11 +81,12 @@ src/
     format.ts             ARS currency, relative time (es-AR)
     normalize.ts          parseGrams, parseArsPrice, pricePerKg
   scrapers/
-    stores.ts             registry: 6 stores, source URLs, refresh intervals
+    stores.ts             registry: 11 stores, source URLs, refresh intervals
     http.ts               fetch wrapper: browser UA, timeout, retries, delay
     woocommerce-api.ts    Café Delirante (Woo Store API)
     woocommerce-html.ts   Flat&White (product sitemap + JSON-LD; robots-safe)
-    tiendanube.ts         Indigo, Momo, Buna, Fuego (listing JSON-LD + pagination)
+    tiendanube.ts         Indigo, Momo, Buna, Fuego, Modo Barista, Kapselmaker, John & Joe (listing JSON-LD + pagination)
+    mercadolibre.ts       Café Indios Verdes, Drupa (card HTML, Googlebot UA)
     enrich.ts             origin/variety/category/grind/equipment heuristics
     index.ts              scrapeStore(id) dispatcher
     __fixtures__/         real payload excerpts powering the offline tests
@@ -102,4 +103,4 @@ vitest.config.ts          node environment, src/**/*.test.ts
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the test suite once (offline fixtures only) |
 | `npm run test:watch` | Run tests in watch mode |
-| `LIVE=1 npx vitest run src/scrapers/__tests__/live.test.ts` | Live smoke against the 6 real stores (~2 min) |
+| `LIVE=1 npx vitest run src/scrapers/__tests__/live.test.ts` | Live smoke against the 11 real stores (~2 min) |

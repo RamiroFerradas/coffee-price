@@ -12,9 +12,14 @@ describe("dueStores", () => {
     expect(dueStores(NOW, {}).map((store) => store.id).sort()).toEqual([
       "bunatostadores",
       "cafedelirante",
+      "drupa",
       "flatnwhite",
       "fuegotostadores",
       "indigoroasters",
+      "indiosverdes",
+      "johnandjoe",
+      "kapselmaker",
+      "modobarista",
       "momotostadores",
     ]);
   });

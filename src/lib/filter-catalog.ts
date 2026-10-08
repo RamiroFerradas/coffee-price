@@ -1,25 +1,26 @@
 import { STORES } from "@/scrapers/stores";
+import { availableGrams, sortGramValues } from "@/lib/format";
 import type { Product, StoreId } from "@/lib/types";
 
 export type SortKey =
   | "price_per_kg-asc"
   | "price_per_kg-desc"
+  | "grams-desc"
+  | "grams-asc"
   | "price-asc"
   | "price-desc"
   | "name-asc"
   | "roaster-asc";
 
-export type CategoryFilter = "all" | "single-origin" | "blend";
-export type GrindFilter = "all" | "whole-bean" | "ground";
+export type CategoryFilter = "all" | "single-origin" | "blend" | "equipment";
 
 export interface CatalogFilters {
   q: string;
   roasters: StoreId[];
   grams: number[];
   category: CategoryFilter;
-  grind: GrindFilter;
+  origin: "all" | string;
   sort: SortKey;
-  includeEquipment: boolean;
 }
 
 export const NO_GRAMS = -1;
@@ -27,14 +28,15 @@ export const NO_GRAMS = -1;
 const SORT_KEYS: readonly SortKey[] = [
   "price_per_kg-asc",
   "price_per_kg-desc",
+  "grams-desc",
+  "grams-asc",
   "price-asc",
   "price-desc",
   "name-asc",
   "roaster-asc",
 ];
 
-const CATEGORIES: readonly CategoryFilter[] = ["all", "single-origin", "blend"];
-const GRINDS: readonly GrindFilter[] = ["all", "whole-bean", "ground"];
+const CATEGORIES: readonly CategoryFilter[] = ["all", "single-origin", "blend", "equipment"];
 const STORE_IDS: readonly StoreId[] = STORES.map((store) => store.id);
 
 function isOneOf<T extends string>(value: string | undefined, allowed: readonly T[]): value is T {
@@ -71,9 +73,8 @@ export function defaultFilters(): CatalogFilters {
     roasters: [],
     grams: [],
     category: "all",
-    grind: "all",
+    origin: "all",
     sort: "price_per_kg-asc",
-    includeEquipment: false,
   };
 }
 
@@ -86,19 +87,17 @@ export function parseFilters(params: Record<string, string | string[]>): Catalog
   }
 
   const q = paramValue(params.q);
-  const includeEquipment = paramValue(params.includeEquipment);
   const sort = paramValue(params.sort);
   const category = paramValue(params.category);
-  const grind = paramValue(params.grind);
+  const origin = paramValue(params.origin);
 
   return {
     q: q ?? defaults.q,
     roasters,
     grams: parseGramsParam(params.grams),
     category: isOneOf(category, CATEGORIES) ? category : defaults.category,
-    grind: isOneOf(grind, GRINDS) ? grind : defaults.grind,
+    origin: origin || defaults.origin,
     sort: isOneOf(sort, SORT_KEYS) ? sort : defaults.sort,
-    includeEquipment: includeEquipment === "1" || includeEquipment === "true",
   };
 }
 
@@ -110,9 +109,8 @@ export function serializeFilters(filters: CatalogFilters): Record<string, string
   if (filters.roasters.length > 0) params.roasters = filters.roasters.join(",");
   if (filters.grams.length > 0) params.grams = filters.grams.join(",");
   if (filters.category !== defaults.category) params.category = filters.category;
-  if (filters.grind !== defaults.grind) params.grind = filters.grind;
+  if (filters.origin !== defaults.origin) params.origin = filters.origin;
   if (filters.sort !== defaults.sort) params.sort = filters.sort;
-  if (filters.includeEquipment !== defaults.includeEquipment) params.includeEquipment = "1";
 
   return params;
 }
@@ -121,15 +119,26 @@ function matchesQuery(product: Product, query: string): boolean {
   const tokens = normalize(query).split(/\s+/).filter(Boolean);
   if (tokens.length === 0) return true;
 
-  const haystack = [product.name, product.origin, product.variety, product.roaster].map((field) =>
-    field ? normalize(field) : "",
-  );
+  const haystack = [
+    product.name,
+    product.origin,
+    product.variety,
+    product.roaster,
+    product.tasting_notes,
+    product.process,
+    product.roast_level,
+  ].map((field) => (field ? normalize(field) : ""));
   return tokens.every((token) => haystack.some((field) => field.includes(token)));
+}
+
+function matchesCategory(product: Product, category: CategoryFilter): boolean {
+  if (category === "all") return product.category !== "equipment";
+  return product.category === category;
 }
 
 export function filterCatalog(products: Product[], filters: CatalogFilters): Product[] {
   return products.filter((product) => {
-    if (product.category === "equipment" && !filters.includeEquipment) return false;
+    if (!product.in_stock) return false;
     if (filters.roasters.length > 0 && !filters.roasters.includes(product.store)) return false;
 
     if (filters.grams.length > 0) {
@@ -137,12 +146,41 @@ export function filterCatalog(products: Product[], filters: CatalogFilters): Pro
       if (!match) return false;
     }
 
-    if (filters.category !== "all" && product.category !== filters.category) return false;
-    if (filters.grind !== "all" && product.grind !== filters.grind) return false;
+    if (!matchesCategory(product, filters.category)) return false;
+    if (filters.origin !== "all" && product.origin?.toLowerCase() !== filters.origin.toLowerCase()) return false;
     if (!matchesQuery(product, filters.q)) return false;
 
     return true;
   });
+}
+
+export interface GramFacetOptions {
+  values: number[];
+  hasNull: boolean;
+}
+
+export function gramFacetOptions(products: Product[], filters: CatalogFilters): GramFacetOptions {
+  const pool = filterCatalog(products, { ...filters, grams: [] });
+  const values = sortGramValues([
+    ...availableGrams(pool),
+    ...filters.grams.filter((grams) => grams > 0),
+  ]);
+  const hasNull = pool.some((product) => product.grams === null) || filters.grams.includes(NO_GRAMS);
+  return { values, hasNull };
+}
+
+export function roasterFacetOptions(products: Product[], filters: CatalogFilters): StoreId[] {
+  const allowed = new Set(filterCatalog(products, { ...filters, roasters: [] }).map((p) => p.store));
+  const options: StoreId[] = [];
+  const seen = new Set<StoreId>();
+  for (const product of products) {
+    if (seen.has(product.store)) continue;
+    seen.add(product.store);
+    if (allowed.has(product.store) || filters.roasters.includes(product.store)) {
+      options.push(product.store);
+    }
+  }
+  return options;
 }
 
 type Comparator = (a: Product, b: Product) => number;
@@ -156,9 +194,20 @@ function byPricePerKg(descending: boolean): Comparator {
   };
 }
 
+function byGrams(descending: boolean): Comparator {
+  return (a, b) => {
+    if (a.grams === null && b.grams === null) return 0;
+    if (a.grams === null) return 1;
+    if (b.grams === null) return -1;
+    return descending ? b.grams - a.grams : a.grams - b.grams;
+  };
+}
+
 const COMPARATORS: Record<SortKey, Comparator> = {
   "price_per_kg-asc": byPricePerKg(false),
   "price_per_kg-desc": byPricePerKg(true),
+  "grams-desc": byGrams(true),
+  "grams-asc": byGrams(false),
   "price-asc": (a, b) => a.price - b.price,
   "price-desc": (a, b) => b.price - a.price,
   "name-asc": (a, b) => a.name.localeCompare(b.name, "es"),

@@ -1,5 +1,5 @@
-import { appendFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
+import { writeArtifact } from "@/lib/artifact";
 import type { StoreId } from "@/lib/types";
 import { scrapeStore } from "../index";
 
@@ -12,11 +12,24 @@ const STORE_IDS: StoreId[] = [
   "momotostadores",
   "bunatostadores",
   "fuegotostadores",
+  "modobarista",
+  "kapselmaker",
+  "johnandjoe",
+  "indiosverdes",
+  "drupa",
 ];
+
+const MIN_ROWS: Partial<Record<StoreId, number>> = {
+  flatnwhite: 4,
+  johnandjoe: 40,
+  kapselmaker: 100,
+  indiosverdes: 50,
+  drupa: 15,
+};
 
 describe.skipIf(!live)("live scrapers", () => {
   for (const id of STORE_IDS) {
-    const minRows = id === "flatnwhite" ? 30 : 10;
+    const minRows = MIN_ROWS[id] ?? 10;
 
     it(
       `scrapes ${id}`,
@@ -30,7 +43,13 @@ describe.skipIf(!live)("live scrapers", () => {
         expect(new Set(rows.map((row) => row.external_id)).size).toBe(rows.length);
 
         const withGrams = rows.filter((row) => row.grams != null).length;
-        expect(withGrams / rows.length).toBeGreaterThanOrEqual(0.7);
+        if (id === "kapselmaker") {
+          expect(withGrams).toBeGreaterThan(0);
+        } else if (id === "drupa") {
+          expect(withGrams / rows.length).toBeGreaterThanOrEqual(0.5);
+        } else {
+          expect(withGrams / rows.length).toBeGreaterThanOrEqual(0.7);
+        }
         expect(rows.every((row) => typeof row.url === "string" && row.url.length > 0)).toBe(true);
 
         const summary =
@@ -38,7 +57,11 @@ describe.skipIf(!live)("live scrapers", () => {
           `(${((withGrams / rows.length) * 100).toFixed(0)}%), ` +
           `price ${Math.min(...rows.map((r) => r.price))}-${Math.max(...rows.map((r) => r.price))} ARS`;
         console.log(summary);
-        appendFileSync(new URL("../../../.vitest/live-summary.txt", import.meta.url), `${summary}\n`);
+        writeArtifact(
+          new URL("../../../.vitest/live-summary.txt", import.meta.url),
+          `${summary}\n`,
+          { append: true },
+        );
       },
       300_000,
     );

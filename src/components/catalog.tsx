@@ -6,25 +6,28 @@ import {
   NO_GRAMS,
   defaultFilters,
   filterCatalog,
+  gramFacetOptions,
   parseFilters,
+  roasterFacetOptions,
   serializeFilters,
   sortCatalog,
   type CatalogFilters,
   type CategoryFilter,
-  type GrindFilter,
   type SortKey,
 } from "@/lib/filter-catalog";
-import { availableGrams } from "@/lib/format";
 import type { CatalogMeta } from "@/lib/catalog";
+import { formatGrams } from "@/lib/format";
 import type { Product, StoreId } from "@/lib/types";
 import { ProductCard } from "./product-card";
 import { UpdatedBadge } from "./updated-badge";
 
 const SORT_OPTIONS: { value: SortKey; label: string }[] = [
-  { value: "price_per_kg-asc", label: "Menor precio por kg" },
   { value: "price_per_kg-desc", label: "Mayor precio por kg" },
-  { value: "price-asc", label: "Menor precio" },
+  { value: "price_per_kg-asc", label: "Menor precio por kg" },
+  { value: "grams-desc", label: "Mayor gramaje" },
+  { value: "grams-asc", label: "Menor gramaje" },
   { value: "price-desc", label: "Mayor precio" },
+  { value: "price-asc", label: "Menor precio" },
   { value: "name-asc", label: "Nombre (A-Z)" },
   { value: "roaster-asc", label: "Tostador (A-Z)" },
 ];
@@ -33,23 +36,18 @@ const CATEGORY_OPTIONS: { value: CategoryFilter; label: string }[] = [
   { value: "all", label: "Todos los cafés" },
   { value: "single-origin", label: "Single origin" },
   { value: "blend", label: "Blend" },
-];
-
-const GRIND_OPTIONS: { value: GrindFilter; label: string }[] = [
-  { value: "all", label: "Cualquier molienda" },
-  { value: "whole-bean", label: "En grano" },
-  { value: "ground", label: "Molido" },
+  { value: "equipment", label: "Herramientas y accesorios" },
 ];
 
 const SELECT_CLASS =
-  "rounded-lg border border-line bg-surface px-3 py-2 text-sm text-foreground";
+  "w-full rounded-full border border-line bg-surface px-4 py-2 text-sm text-foreground transition-colors duration-200 hover:border-accent sm:w-auto";
 
 function chipClass(active: boolean): string {
   return [
-    "rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+    "shrink-0 rounded-full border px-3.5 py-2 text-xs font-semibold transition-all duration-200",
     active
-      ? "border-accent bg-accent text-background"
-      : "border-line bg-surface text-foreground hover:border-accent",
+      ? "border-accent bg-accent text-on-accent shadow-sm"
+      : "border-line bg-surface text-foreground hover:-translate-y-0.5 hover:border-accent hover:text-accent",
   ].join(" ");
 }
 
@@ -79,18 +77,27 @@ export function Catalog({
   );
 
   const roasterChips = useMemo(() => {
-    const map = new Map<StoreId, string>();
+    const names = new Map<StoreId, string>();
     for (const product of products) {
-      if (!map.has(product.store)) map.set(product.store, product.roaster);
+      if (!names.has(product.store)) names.set(product.store, product.roaster);
     }
-    return [...map.entries()];
-  }, [products]);
+    const chips: [StoreId, string][] = [];
+    for (const store of roasterFacetOptions(products, filters)) {
+      const name = names.get(store);
+      if (name !== undefined) chips.push([store, name]);
+    }
+    return chips;
+  }, [products, filters]);
 
-  const gramSizes = useMemo(() => availableGrams(products), [products]);
-  const hasNullGrams = useMemo(
-    () => products.some((product) => product.grams === null),
-    [products],
-  );
+  const gramFacet = useMemo(() => gramFacetOptions(products, filters), [products, filters]);
+
+  const originOptions = useMemo(() => {
+    const unique = new Set<string>();
+    for (const product of products) {
+      if (product.origin !== null) unique.add(product.origin);
+    }
+    return [...unique].sort((a, b) => a.localeCompare(b, "es"));
+  }, [products]);
 
   const visible = useMemo(
     () => sortCatalog(filterCatalog(products, filters), filters.sort),
@@ -113,7 +120,7 @@ export function Catalog({
 
   return (
     <section aria-label="Catálogo de cafés">
-      <div className="sticky top-0 z-20 -mx-4 border-b border-line bg-background/95 px-4 pb-3 pt-3 backdrop-blur sm:-mx-6 sm:px-6">
+      <div className="-mx-4 border-b border-line bg-background px-4 pb-3 pt-3 sm:-mx-6 sm:px-6">
         <div className="flex items-center gap-2">
           <input
             type="search"
@@ -121,21 +128,22 @@ export function Catalog({
             onChange={(event) => applyFilters({ ...filters, q: event.target.value })}
             placeholder="Buscar café, origen o tostador…"
             aria-label="Buscar productos"
-            className="w-full rounded-lg border border-line bg-surface px-4 py-2 text-sm text-foreground placeholder:text-muted"
+            className="w-full rounded-full border border-line bg-surface px-5 py-2.5 text-sm text-foreground transition-colors duration-200 placeholder:text-muted hover:border-accent"
           />
           <button
             type="button"
             onClick={() => setFiltersOpen((open) => !open)}
             aria-expanded={filtersOpen}
-            className={`${filtersOpen ? "border-accent text-accent" : "border-line text-foreground"} rounded-lg border bg-surface px-3 py-2 text-sm font-medium md:hidden`}
+            className={`${filtersOpen ? "border-accent text-accent" : "border-line text-foreground"} shrink-0 rounded-full border bg-surface px-4 py-2.5 text-sm font-semibold transition-colors duration-200 md:hidden`}
           >
             Filtros
           </button>
         </div>
 
         <div className="flex items-center justify-between gap-3 pt-2 text-sm text-muted">
-          <span>
-            {visible.length} {visible.length === 1 ? "producto" : "productos"}
+          <span className="text-xs font-semibold uppercase tracking-[0.14em]">
+            <span className="font-mono tabular-nums">{visible.length}</span>{" "}
+            {visible.length === 1 ? "producto" : "productos"}
           </span>
           <UpdatedBadge updatedAt={meta.updatedAt} />
         </div>
@@ -157,19 +165,19 @@ export function Catalog({
             ))}
           </div>
 
-          <div className="flex flex-wrap gap-1.5">
-            {gramSizes.map((grams) => (
+          <div className="-mx-4 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0 sm:pb-0">
+            {gramFacet.values.map((grams) => (
               <button
                 key={grams}
                 type="button"
                 onClick={() => toggleGram(grams)}
                 aria-pressed={filters.grams.includes(grams)}
-                className={chipClass(filters.grams.includes(grams))}
+                className={`${chipClass(filters.grams.includes(grams))} font-mono tabular-nums`}
               >
-                {grams >= 1000 ? `${grams / 1000} kg` : `${grams} g`}
+                {formatGrams(grams)}
               </button>
             ))}
-            {hasNullGrams && (
+            {gramFacet.hasNull && (
               <button
                 type="button"
                 onClick={() => toggleGram(NO_GRAMS)}
@@ -198,16 +206,15 @@ export function Catalog({
             </select>
 
             <select
-              aria-label="Molienda"
-              value={filters.grind}
-              onChange={(event) =>
-                applyFilters({ ...filters, grind: event.target.value as GrindFilter })
-              }
+              aria-label="País de origen"
+              value={filters.origin}
+              onChange={(event) => applyFilters({ ...filters, origin: event.target.value })}
               className={SELECT_CLASS}
             >
-              {GRIND_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
+              <option value="all">Todos los países</option>
+              {originOptions.map((origin) => (
+                <option key={origin} value={origin}>
+                  {origin}
                 </option>
               ))}
             </select>
@@ -226,39 +233,27 @@ export function Catalog({
                 </option>
               ))}
             </select>
-
-            <label className="flex cursor-pointer items-center gap-2 text-sm text-foreground">
-              <input
-                type="checkbox"
-                checked={filters.includeEquipment}
-                onChange={(event) =>
-                  applyFilters({ ...filters, includeEquipment: event.target.checked })
-                }
-                className="h-4 w-4 accent-accent"
-              />
-              Mostrar máquinas y accesorios
-            </label>
           </div>
         </div>
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-2xl border border-line bg-surface p-10 text-center">
-          <p className="font-serif text-xl text-foreground">
+        <div className="mt-6 rounded-3xl border border-dashed border-line bg-surface p-12 text-center">
+          <p className="font-display text-2xl text-foreground">
             No encontramos cafés con esos filtros
           </p>
           <button
             type="button"
             onClick={() => applyFilters(defaultFilters())}
-            className="mt-4 rounded-full bg-accent px-4 py-2 text-sm font-medium text-background hover:bg-accent-strong"
+            className="mt-5 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-on-accent transition-all duration-200 hover:-translate-y-0.5 hover:bg-accent-strong hover:shadow-md"
           >
             Limpiar filtros
           </button>
         </div>
       ) : (
-        <div className="grid grid-cols-1 gap-4 py-6 sm:grid-cols-2 lg:grid-cols-3">
-          {visible.map((product) => (
-            <ProductCard key={product.id} product={product} />
+        <div className="grid grid-cols-1 gap-5 py-8 sm:grid-cols-2 lg:grid-cols-4">
+          {visible.map((product, index) => (
+            <ProductCard key={product.id} product={product} index={index} />
           ))}
         </div>
       )}

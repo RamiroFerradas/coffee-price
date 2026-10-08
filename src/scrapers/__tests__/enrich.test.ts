@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { RawProduct } from "@/lib/types";
-import { enrich } from "../enrich";
+import { enrich, isNonCoffee } from "../enrich";
 
 function raw(name: string, extra: Partial<RawProduct> = {}): RawProduct {
   return {
@@ -13,6 +13,28 @@ function raw(name: string, extra: Partial<RawProduct> = {}): RawProduct {
     ...extra,
   };
 }
+
+describe("isNonCoffee", () => {
+  it("flags the non-coffee junk titles found on MercadoLibre stores", () => {
+    expect(isNonCoffee("Leche De Almendras Vegana Amande Sin Tacc 1l X 8 U Fundador")).toBe(true);
+    expect(isNonCoffee("Jarabe Syrup Sabor Vainilla Café Martínez Cremuccino 1 L Sin TACC")).toBe(true);
+    expect(isNonCoffee("Té Inti Zen Negro en Saquitos Miel Vainilla Cacao 15u")).toBe(true);
+    expect(isNonCoffee("Funda Protectora Para Taza Reutilizable")).toBe(true);
+    expect(isNonCoffee("Pintura Látex Interior Blanca 1 L")).toBe(true);
+    expect(isNonCoffee("Servicio De Molienda A Domicilio")).toBe(true);
+  });
+
+  it("keeps coffee listings", () => {
+    expect(isNonCoffee("Café De Especialidad En Grano Kenia X 1 Kg - Drupa")).toBe(false);
+    expect(isNonCoffee("Café Fundador Elite X Kg En Grano")).toBe(false);
+    expect(isNonCoffee("Café Colombia - Brasil - Ristretto - Especialidad. 5 Cuartos")).toBe(false);
+  });
+
+  it("keeps equipment listings for the enricher to categorize", () => {
+    expect(isNonCoffee("Cápsulas Café Fundador Brasil Comp. Nespresso® X 30 Uni")).toBe(false);
+    expect(isNonCoffee("Molino Manual Para Café")).toBe(false);
+  });
+});
 
 describe("enrich origin", () => {
   it("detects Colombia", () => {
@@ -107,8 +129,23 @@ describe("enrich category", () => {
     expect(enrich(raw("Café de Colombia Huila")).category).toBe("single-origin");
   });
 
-  it("returns null category when neither blend nor origin", () => {
-    expect(enrich(raw("Café Descafeinado")).category).toBeNull();
+  it("falls back to blend when a coffee signal exists but no origin", () => {
+    expect(enrich(raw("Café Descafeinado")).category).toBe("blend");
+    expect(enrich(raw("Outlet x 1kg")).category).toBe("blend");
+    expect(enrich(raw("Café Especial Mr. Wush Wush 01 - Lavado")).category).toBe("blend");
+  });
+
+  it("stays null when there is no coffee signal, origin or variety", () => {
+    expect(enrich(raw("Francesca")).category).toBeNull();
+  });
+
+  it("flags a named variety as single-origin", () => {
+    expect(enrich(raw("Bourbon Rojo x 1kg")).category).toBe("single-origin");
+  });
+
+  it("classifies real coffees that match neither origin nor variety", () => {
+    expect(enrich(raw("Waliki Gesha x 200g")).category).not.toBeNull();
+    expect(enrich(raw("SUSCRIPCIÓN CLÁSICA - 1 KG/500 g/750 G")).category).toBe("blend");
   });
 });
 
@@ -164,10 +201,10 @@ describe("enrich equipment category", () => {
   });
 
   it("does not flag weak keywords when the name has a coffee signal", () => {
-    expect(enrich(raw("Café molido para filtro V60")).category).toBeNull();
+    expect(enrich(raw("Café molido para filtro V60")).category).toBe("blend");
     expect(enrich(raw("Chemex blend de la casa")).category).toBe("blend");
     expect(enrich(raw("Filtro V60 Colombia")).category).toBe("single-origin");
-    expect(enrich(raw("V60 1000 g")).category).toBeNull();
+    expect(enrich(raw("V60 1000 g")).category).toBe("blend");
   });
 
   it("keeps equipment out of coffee-only categories", () => {
@@ -177,6 +214,78 @@ describe("enrich equipment category", () => {
 
   it("ignores the coffee signal when a strong keyword matches", () => {
     expect(enrich(raw("Molino para café en grano")).category).toBe("equipment");
+  });
+
+  it("hides courses and workshops", () => {
+    expect(enrich(raw("Curso Barista Inicial")).category).toBe("equipment");
+    expect(enrich(raw("Indigo Curso Control de calidad y calibración de espresso")).category).toBe("equipment");
+    expect(enrich(raw("Taller De Texturización y Arte Latte")).category).toBe("equipment");
+    expect(enrich(raw("Curso FUNDAMENTOS DEL BARISTA")).category).toBe("equipment");
+    expect(enrich(raw("BARISTA INTEGRAL - SÁBADOS")).category).toBe("equipment");
+  });
+
+  it("hides merch and non-coffee products", () => {
+    expect(enrich(raw("REMERAS ABUELO - OVERSIZE XS")).category).toBe("equipment");
+    expect(enrich(raw("TOTE BAG de arpillera reciclada")).category).toBe("equipment");
+    expect(enrich(raw("REMERA BUNA")).category).toBe("equipment");
+    expect(enrich(raw("LICOR DE CAFE")).category).toBe("equipment");
+    expect(enrich(raw("OATLY BARISTA EDITION - LECHE DE AVENA 1 L")).category).toBe("equipment");
+    expect(enrich(raw("NUDE BARISTA - LECHE DE AVENA SIN GLUTEN 1LT")).category).toBe("equipment");
+  });
+
+  it("hides utensils and brewing accessories even when cafe appears in the name", () => {
+    expect(enrich(raw("Jarra de 450 ML")).category).toBe("equipment");
+    expect(enrich(raw("PAVA BARISTA P/ CAFE DE ACERO INOXIDABLE CON TERMOMETRO 1.2 L")).category).toBe("equipment");
+    expect(enrich(raw("SOPORTE DRIPPER NEGRO")).category).toBe("equipment");
+    expect(enrich(raw("PANTALLA PORTAFILTRO")).category).toBe("equipment");
+    expect(enrich(raw("Filtro de papel V60 x100")).category).toBe("equipment");
+  });
+
+  it("hides gear brands, teas, cleaning and merch from the store audit", () => {
+    expect(enrich(raw("URNEX GRINDZ")).category).toBe("equipment");
+    expect(enrich(raw("URNEX CAFIZA POWDER")).category).toBe("equipment");
+    expect(enrich(raw("PITCHER INOX")).category).toBe("equipment");
+    expect(enrich(raw("Pitcher Kettle 600ml")).category).toBe("equipment");
+    expect(enrich(raw("SERVER MINIMAL")).category).toBe("equipment");
+    expect(enrich(raw("Knock Box")).category).toBe("equipment");
+    expect(enrich(raw("Tamping Mat XL")).category).toBe("equipment");
+    expect(enrich(raw("DISTRIBUIDOR DE PARTICULAS")).category).toBe("equipment");
+    expect(enrich(raw("WDT: Distribuidor de Café")).category).toBe("equipment");
+    expect(enrich(raw("Molinillo de café GM1")).category).toBe("equipment");
+    expect(enrich(raw("Molinillo Manual Con Regulador Externo")).category).toBe("equipment");
+    expect(enrich(raw("Vaso Térmico 320")).category).toBe("equipment");
+    expect(enrich(raw("Mug Térmico 360")).category).toBe("equipment");
+    expect(enrich(raw("Bolso Premium")).category).toBe("equipment");
+    expect(enrich(raw("Gift Card")).category).toBe("equipment");
+    expect(enrich(raw("English Breakfast Tea")).category).toBe("equipment");
+    expect(enrich(raw("Bai Mu Dan")).category).toBe("equipment");
+    expect(enrich(raw("Masala Chai")).category).toBe("equipment");
+    expect(enrich(raw("Set de Té")).category).toBe("equipment");
+    expect(enrich(raw("Polvo limpiador x 300g")).category).toBe("equipment");
+    expect(enrich(raw("Prensa francesa Bodum Brazil")).category).toBe("equipment");
+    expect(enrich(raw("Kit Accesorios Para Espresso")).category).toBe("equipment");
+    expect(enrich(raw("Filtrados en casa Online")).category).toBe("equipment");
+  });
+
+  it("flags DeLonghi and Suono machines as equipment", () => {
+    expect(enrich(raw("DeLonghi Dedica + Regalo")).category).toBe("equipment");
+    expect(enrich(raw("DeLonghi Espresso Specialista + Regalo")).category).toBe("equipment");
+    expect(enrich(raw("DeLonghi Magnifica Start Black + Regalo")).category).toBe("equipment");
+    expect(enrich(raw("Suono Atelier Espresso + Regalo")).category).toBe("equipment");
+    expect(enrich(raw("Suono Italiana electrica + Regalo")).category).toBe("equipment");
+    expect(enrich(raw("Suono Slim + Regalo")).category).toBe("equipment");
+  });
+
+  it("flags generic machine and coffee-maker names as equipment", () => {
+    expect(enrich(raw("MÁQUINA SUPER AUTOMÁTICA")).category).toBe("equipment");
+    expect(enrich(raw("CAFETERA MOKA ITALIANA")).category).toBe("equipment");
+  });
+
+  it("keeps real coffees visible", () => {
+    expect(enrich(raw("Café Descafeinado")).category).not.toBe("equipment");
+    expect(enrich(raw("BOA VISTA 1 kg")).category).not.toBe("equipment");
+    expect(enrich(raw("CAJA SET ESPRESSO")).category).not.toBe("equipment");
+    expect(enrich(raw("Black Fuel Cold Brew - (Six pack)")).category).not.toBe("equipment");
   });
 });
 

@@ -85,10 +85,72 @@ const WEAK_EQUIPMENT = [
   "filtro",
 ];
 
+const NON_COFFEE: ReadonlyArray<RegExp> = [
+  /\bcurso(?:s)?\b/,
+  /\btaller(?:es)?\b/,
+  /\bclase(?:s)?\b/,
+  /\bworkshops?\b/,
+  /\bmasterclass(?:es)?\b/,
+  /\bbarista integral\b/,
+  /\bremeras?\b/,
+  /\btote\b/,
+  /\bgorras?\b/,
+  /\bbilleteras?\b/,
+  /\bstickers?\b/,
+  /\bposters?\b/,
+  /\bavenas?\b/,
+  /\boatly\b/,
+  /\blicor(?:es)?\b/,
+  /\bjarras?\b/,
+  /\bpavas?\b/,
+  /\btermos?\b/,
+  /\bsoportes?\b/,
+  /\bpantallas?\b/,
+  /\bportafiltros?\b/,
+  /\bdrippers?\b/,
+  /\bdispensers?\b/,
+  /\bcarritos?\b/,
+  /\baccesorios?\b/,
+  /\bmolinillos?\b/,
+  /\bvasos?\b/,
+  /\bmugs?\b/,
+  /\bbolsos?\b/,
+  /\bpitchers?\b/,
+  /\bservers?\b/,
+  /\bknock\s*box(?:es)?\b/,
+  /\btamping\s*mat\b/,
+  /\bdistribuidors?\b/,
+  /\bwdt\b/,
+  /\burnex\b/,
+  /\bbodum\b/,
+  /\bdelonghi\b/,
+  /\bsuono\b/,
+  /\bmaquinas?\b/,
+  /\bcafeteras?\b/,
+  /\bpolvo\b/,
+  /\btea\b/,
+  /\bte\b/,
+  /\bchais?\b/,
+  /\brooibos\b/,
+  /\bbai mu dan\b/,
+  /\bgift\s*cards?\b/,
+  /\bfiltrados en casa\b/,
+  /\bleches?\b/,
+  /\bjarabes?\b/,
+  /\bsyrups?\b/,
+  /\bfundas?\b/,
+  /\bpinturas?\b/,
+  /\bservicios?\b/,
+];
+
 const COFFEE_SIGNAL = /caf[ée]|blend|grano|molido/;
 
 function normalize(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+}
+
+export function isNonCoffee(name: string): boolean {
+  return NON_COFFEE.some((pattern) => pattern.test(normalize(name)));
 }
 
 function firstMatch(
@@ -107,12 +169,6 @@ export function enrich(raw: RawProduct): RawProduct {
   const origin = raw.origin ?? firstMatch(normalized, ORIGINS);
   const variety = raw.variety ?? firstMatch(normalized, VARIETIES);
 
-  let category = raw.category ?? null;
-  if (category == null) {
-    if (/\bblend\b/i.test(raw.name)) category = "blend";
-    else if (origin) category = "single-origin";
-  }
-
   let grind = raw.grind ?? null;
   if (grind == null) {
     if (/grano|whole bean|en grano/i.test(raw.name)) grind = "whole-bean";
@@ -130,9 +186,17 @@ export function enrich(raw: RawProduct): RawProduct {
     firstMatch(normalized, ORIGINS) !== null ||
     parseGrams(raw.name) !== null;
 
-  if (strongEquipment || (weakEquipment && !coffeeSignal)) {
-    category = "equipment";
+  const nonCoffee = isNonCoffee(raw.name);
+  const isEquipment = nonCoffee || strongEquipment || (weakEquipment && !coffeeSignal);
+
+  let category = raw.category ?? null;
+  if (category == null && !isEquipment) {
+    if (/\bblend\b/i.test(raw.name)) category = "blend";
+    else if (origin) category = "single-origin";
+    else if (variety) category = "single-origin";
+    else if (coffeeSignal) category = "blend";
   }
+  if (isEquipment) category = "equipment";
 
   return { ...raw, origin, variety, category, grind };
 }

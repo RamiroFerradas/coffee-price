@@ -10,11 +10,13 @@ import {
   firstImageUrl,
   gramsFromWeight,
   inStockFromAvailability,
+  productUrl,
   slugFromUrl,
   type LdOffer,
   type LdProduct,
 } from "./ldjson";
 import type { WooHtmlStore } from "./stores";
+import { specsFromWooDetail } from "./specs";
 
 export interface WooHtmlScrapeDeps {
   fetchFn?: FetchFn;
@@ -30,13 +32,46 @@ function parseSitemap(xml: string): string[] {
   return urls;
 }
 
+function isSameOrigin(url: string, baseUrl: string): boolean {
+  try {
+    return new URL(url).origin === new URL(baseUrl).origin;
+  } catch {
+    return false;
+  }
+}
+
+function urlsFromArchive(html: string, baseUrl: string): string[] {
+  const discovered = new Set<string>();
+  for (const product of collectProducts(extractLdJsonBlocks(html))) {
+    const url = absoluteUrl(productUrl(product), baseUrl);
+    if (url && isSameOrigin(url, baseUrl)) discovered.add(url);
+  }
+  return [...discovered];
+}
+
 function cleanName(name: string): string {
   return decodeEntities(name)
     .replace(/\s*[|\-]\s*flat\s*&?\s*white.*$/i, "")
     .trim();
 }
 
-function toRow(config: WooHtmlStore, product: LdProduct, requestedUrl: string): RawProduct | null {
+const WAYRA_SHIPPING_BLOCK = "wayra-product-shipping-free";
+const FREE_SHIPPING_THRESHOLD = /supera los\s*\$?\s*([\d.]+)/i;
+
+function shippingNoteFromDetail(html: string): string | null {
+  const start = html.indexOf(WAYRA_SHIPPING_BLOCK);
+  if (start < 0) return null;
+  const text = decodeEntities(html.slice(start, start + 300).replace(/<[^>]+>/g, " "));
+  const threshold = FREE_SHIPPING_THRESHOLD.exec(text)?.[1];
+  return threshold ? `Envío gratis desde $${threshold}` : null;
+}
+
+function toRow(
+  config: WooHtmlStore,
+  product: LdProduct,
+  requestedUrl: string,
+  html: string,
+): RawProduct | null {
   const offers = product.offers;
   const offer: LdOffer | undefined = Array.isArray(offers) ? offers[0] : offers;
   if (!offer) return null;
@@ -50,6 +85,7 @@ function toRow(config: WooHtmlStore, product: LdProduct, requestedUrl: string): 
   if (!name) return null;
 
   const sku = typeof product.sku === "string" ? product.sku.trim() : "";
+  const ldDescription = typeof product.description === "string" ? product.description : null;
   return {
     store: config.id,
     external_id: sku || slugFromUrl(requestedUrl),
@@ -60,7 +96,64 @@ function toRow(config: WooHtmlStore, product: LdProduct, requestedUrl: string): 
     image_url: firstImageUrl(product.image, config.baseUrl),
     grams: gramsFromWeight(product.weight),
     in_stock: inStockFromAvailability(offer.availability),
+    free_shipping: null,
+    shipping_note: shippingNoteFromDetail(html),
+    installments: null,
+    ...specsFromWooDetail(html, ldDescription),
   };
+}
+
+interface WooVariation {
+  display_price?: number | string;
+  weight?: number | string;
+  is_in_stock?: boolean;
+}
+
+function parseVariations(html: string): WooVariation[] {
+  const match = /data-product_variations=(["'])([\s\S]*?)\1/.exec(html);
+  if (!match) return [];
+  try {
+    const parsed = JSON.parse(decodeEntities(match[2]));
+    return Array.isArray(parsed) ? (parsed as WooVariation[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function variationGrams(variation: WooVariation): number | null {
+  const weight =
+    typeof variation.weight === "number"
+      ? variation.weight
+      : Number.parseFloat(String(variation.weight ?? ""));
+  if (!Number.isFinite(weight) || weight <= 0) return null;
+  return Math.round(weight * 1000);
+}
+
+function expandWeightRows(row: RawProduct, html: string): RawProduct[] | null {
+  const variations = parseVariations(html);
+  if (variations.length < 2) return null;
+
+  const slug = slugFromUrl(row.url);
+  const byGrams = new Map<number, RawProduct>();
+  for (const variation of variations) {
+    const grams = variationGrams(variation);
+    if (grams == null || byGrams.has(grams)) continue;
+    const price = parseArsPrice(variation.display_price ?? "");
+    if (price == null || price <= 0) continue;
+    // First entry per weight wins: the grind axis collapses onto it and the
+    // site carries bad outlier prices on later grind entries (aeropress 1 kg
+    // at the 250 g price), so min/max would pick the wrong value.
+    byGrams.set(grams, {
+      ...row,
+      external_id: `${slug}-${grams}`,
+      price,
+      grams,
+      in_stock:
+        typeof variation.is_in_stock === "boolean" ? variation.is_in_stock : row.in_stock,
+    });
+  }
+  if (byGrams.size < 2) return null;
+  return [...byGrams.values()];
 }
 
 export async function scrapeWooHtml(
@@ -69,20 +162,31 @@ export async function scrapeWooHtml(
 ): Promise<RawProduct[]> {
   const { fetchFn, delayFn = delay } = deps;
 
-  const sitemap = await fetchText(config.sitemapUrl, { fetchFn });
-  const urls = parseSitemap(sitemap).filter((url) => !url.endsWith("/tienda/"));
+  // robots.txt asks for a crawl delay between every request, including the
+  // discovery page -> first product page gap.
+  let requests = 0;
+  const pacedFetch = async (url: string): Promise<string> => {
+    if (requests > 0) await delayFn(config.requestDelayMs);
+    requests += 1;
+    return fetchText(url, { fetchFn });
+  };
+
+  let urls: string[];
+  if (config.discovery.kind === "archive") {
+    urls = urlsFromArchive(await pacedFetch(config.discovery.listingUrl), config.baseUrl);
+  } else {
+    const sitemap = await pacedFetch(config.discovery.sitemapUrl);
+    urls = parseSitemap(sitemap).filter((url) => !url.endsWith("/tienda/"));
+  }
 
   const rows: RawProduct[] = [];
-  let fetched = 0;
   for (const url of urls) {
-    if (fetched > 0) await delayFn(config.requestDelayMs);
-    fetched += 1;
     try {
-      const html = await fetchText(url, { fetchFn });
+      const html = await pacedFetch(url);
       const [product] = collectProducts(extractLdJsonBlocks(html));
       if (!product) continue;
-      const row = toRow(config, product, url);
-      if (row) rows.push(row);
+      const row = toRow(config, product, url, html);
+      if (row) rows.push(...(expandWeightRows(row, html) ?? [row]));
     } catch {
       continue;
     }

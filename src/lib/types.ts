@@ -4,7 +4,12 @@ export type StoreId =
   | "indigoroasters"
   | "momotostadores"
   | "bunatostadores"
-  | "fuegotostadores";
+  | "fuegotostadores"
+  | "modobarista"
+  | "kapselmaker"
+  | "johnandjoe"
+  | "indiosverdes"
+  | "drupa";
 
 export interface Product {
   id: string;
@@ -22,6 +27,14 @@ export interface Product {
   price: number;
   price_per_kg: number | null;
   in_stock: boolean;
+  free_shipping: boolean | null;
+  shipping_note: string | null;
+  installments: string | null;
+  tasting_notes: string | null;
+  process: string | null;
+  roast_level: string | null;
+  altitude: string | null;
+  score: number | null;
   fetched_at: string;
 }
 
@@ -39,4 +52,12 @@ export interface RawProduct {
   grind?: string | null;
   grams?: number | null;
   in_stock?: boolean;
+  free_shipping?: boolean | null;
+  shipping_note?: string | null;
+  installments?: string | null;
+  tasting_notes?: string | null;
+  process?: string | null;
+  roast_level?: string | null;
+  altitude?: string | null;
+  score?: number | null;
 }

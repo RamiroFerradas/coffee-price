@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import type { Product } from "@/lib/types";
-import { availableGrams, formatArs, formatPerKg, formatRelativeTime } from "../format";
+import {
+  availableGrams,
+  formatArs,
+  formatGrams,
+  formatGramsLine,
+  formatPerKg,
+  formatRelativeTime,
+  sortGramValues,
+} from "../format";
 
 function product(overrides: Partial<Product> = {}): Product {
   return {
@@ -19,6 +27,14 @@ function product(overrides: Partial<Product> = {}): Product {
     price: 0,
     price_per_kg: null,
     in_stock: true,
+    free_shipping: null,
+    shipping_note: null,
+    installments: null,
+    tasting_notes: null,
+    process: null,
+    roast_level: null,
+    altitude: null,
+    score: null,
     fetched_at: "2026-01-01T00:00:00.000Z",
     ...overrides,
   };
@@ -43,6 +59,48 @@ describe("formatPerKg", () => {
   });
 });
 
+describe("formatGrams", () => {
+  it("formats exact kilos without decimals", () => {
+    expect(formatGrams(1000)).toBe("1 kg");
+    expect(formatGrams(3000)).toBe("3 kg");
+    expect(formatGrams(50000)).toBe("50 kg");
+  });
+
+  it("keeps the exact fraction with an es-AR decimal comma", () => {
+    expect(formatGrams(2800)).toBe("2,8 kg");
+    expect(formatGrams(1660)).toBe("1,66 kg");
+    expect(formatGrams(1001)).toBe("1,001 kg");
+  });
+
+  it("formats sub-kilo amounts in grams", () => {
+    expect(formatGrams(500)).toBe("500 g");
+    expect(formatGrams(166)).toBe("166 g");
+    expect(formatGrams(250)).toBe("250 g");
+  });
+});
+
+describe("formatGramsLine", () => {
+  it("keeps the per-kilo price on exact-kilo products", () => {
+    expect(formatGramsLine(1000, 73500)).toBe("1 kg · $73.500/kg");
+    expect(formatGramsLine(3000, 45000)).toBe("3 kg · $45.000/kg");
+  });
+
+  it("joins sub-kilo weight with the per-kilo price", () => {
+    expect(formatGramsLine(250, 120000)).toBe("250 g · $120.000/kg");
+    expect(formatGramsLine(2800, 36821)).toBe("2,8 kg · $36.821/kg");
+  });
+
+  it("falls back to the weight alone when the per-kilo price is missing", () => {
+    expect(formatGramsLine(1000, null)).toBe("1 kg");
+    expect(formatGramsLine(500, null)).toBe("500 g");
+  });
+
+  it("returns null when there is no weight", () => {
+    expect(formatGramsLine(null, 5000)).toBeNull();
+    expect(formatGramsLine(null, null)).toBeNull();
+  });
+});
+
 describe("formatRelativeTime", () => {
   const now = new Date("2026-06-15T12:00:00.000Z");
 
@@ -64,8 +122,18 @@ describe("formatRelativeTime", () => {
   });
 });
 
+describe("sortGramValues", () => {
+  it("sorts descending so kg values come first", () => {
+    expect(sortGramValues([125, 250, 1000, 500, 2000])).toEqual([2000, 1000, 500, 250, 125]);
+  });
+
+  it("deduplicates and sorts unsorted input descending", () => {
+    expect(sortGramValues([250, 1000, 250, 125, 1000])).toEqual([1000, 250, 125]);
+  });
+});
+
 describe("availableGrams", () => {
-  it("returns distinct non-null grams with common sizes first", () => {
+  it("puts the biggest values first, descending, when 1 kg is present", () => {
     const products = [
       product({ grams: 1000 }),
       product({ grams: 340 }),
@@ -75,10 +143,29 @@ describe("availableGrams", () => {
       product({ grams: 250 }),
       product({ grams: 125 }),
     ];
-    expect(availableGrams(products)).toEqual([250, 500, 1000, 125, 340]);
+    expect(availableGrams(products)).toEqual([1000, 500, 340, 250, 125]);
   });
 
-  it("returns only the common sizes that exist", () => {
+  it("returns descending order when 1 kg is absent", () => {
+    const products = [
+      product({ grams: 500 }),
+      product({ grams: 125 }),
+      product({ grams: 340 }),
+    ];
+    expect(availableGrams(products)).toEqual([500, 340, 125]);
+  });
+
+  it("deduplicates unsorted input in descending order", () => {
+    const products = [
+      product({ grams: 340 }),
+      product({ grams: 125 }),
+      product({ grams: 340 }),
+      product({ grams: 250 }),
+    ];
+    expect(availableGrams(products)).toEqual([340, 250, 125]);
+  });
+
+  it("returns only the grams that exist", () => {
     expect(availableGrams([product({ grams: 500 })])).toEqual([500]);
     expect(availableGrams([product({ grams: null })])).toEqual([]);
     expect(availableGrams([])).toEqual([]);

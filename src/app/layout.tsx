@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Fraunces, Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,18 +12,71 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const fraunces = Fraunces({
+  variable: "--font-fraunces",
+  subsets: ["latin"],
+  axes: ["opsz"],
+});
+
+const SITE_URL = "https://quierocafe.vercel.app";
+const SITE_TITLE = "Quiero Café — Precios de café de especialidad en Argentina";
+const SITE_DESCRIPTION =
+  "Compará precios por kilo de café de especialidad de tostadores argentinos: marcas, orígenes y moliendas en un solo lugar, con datos actualizados a diario desde las tiendas de cada tostador.";
+
 export const metadata: Metadata = {
-  title: "Coffee Price — Precios de café de especialidad en Argentina",
-  description:
-    "Compará precios por kilo de café de especialidad de tostadores argentinos: marcas, orígenes y moliendas en un solo lugar, con datos que se actualizan cada hora.",
+  metadataBase: new URL(SITE_URL),
+  title: SITE_TITLE,
+  description: SITE_DESCRIPTION,
+  applicationName: "Quiero Café",
+  keywords: [
+    "café de especialidad",
+    "café por kilo",
+    "precio café por kilo",
+    "tostadores argentinos",
+    "comparador de café",
+    "café Colombia",
+    "café Etiopía",
+    "café Brasil",
+    "café Bolivia",
+    "comprar café especial Argentina",
+  ],
+  alternates: {
+    canonical: "/",
+  },
+  openGraph: {
+    type: "website",
+    locale: "es_AR",
+    url: SITE_URL,
+    siteName: "Quiero Café",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
+
+// Runs synchronously while the HTML parses, before first paint: ?theme= beats
+// localStorage, unknown/absent values fall back to espresso. Kept dependency-free.
+const THEME_BOOT_SCRIPT = `(function(){try{var v=["classic","neon","cyber","espresso"],t=null;try{var q=new URLSearchParams(location.search).get("theme");if(v.indexOf(q)>-1)t=q}catch(e){}if(t===null){try{var s=localStorage.getItem("qc-theme");if(v.indexOf(s)>-1)t=s}catch(e){}}document.documentElement.setAttribute("data-theme",t||"espresso")}catch(e){document.documentElement.setAttribute("data-theme","espresso")}})()`;
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="es-AR"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      data-theme="espresso"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${fraunces.variable} h-full antialiased`}
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: THEME_BOOT_SCRIPT }} />
+      </head>
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );

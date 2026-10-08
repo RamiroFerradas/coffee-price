@@ -6,6 +6,8 @@ export interface StoreBase {
   baseUrl: string;
   refreshMinutes: number;
   excludeCategories?: readonly string[];
+  shippingPolicy?: string;
+  installmentsPolicy?: string;
 }
 
 export interface WooApiStore extends StoreBase {
@@ -13,9 +15,13 @@ export interface WooApiStore extends StoreBase {
   source: string;
 }
 
+export type WooHtmlDiscovery =
+  | { kind: "sitemap"; sitemapUrl: string }
+  | { kind: "archive"; listingUrl: string };
+
 export interface WooHtmlStore extends StoreBase {
   platform: "woocommerce-html";
-  sitemapUrl: string;
+  discovery: WooHtmlDiscovery;
   requestDelayMs: number;
 }
 
@@ -27,9 +33,19 @@ export interface TiendanubeStore extends StoreBase {
   platform: "tiendanube";
   source: string;
   pagination: TiendanubePagination;
+  gramsFromSku?: RegExp;
+  gramsFromName?: boolean;
 }
 
-export type StoreConfig = WooApiStore | WooHtmlStore | TiendanubeStore;
+export interface MercadoLibreStore extends StoreBase {
+  platform: "mercadolibre";
+  source: string;
+  requestDelayMs: number;
+  expectCoverage?: boolean;
+  fallbackSource?: string;
+}
+
+export type StoreConfig = WooApiStore | WooHtmlStore | TiendanubeStore | MercadoLibreStore;
 
 const CAFE_DELIRANTE_EXCLUDES = [
   "Accesorios",
@@ -54,8 +70,12 @@ export const STORES: readonly StoreConfig[] = [
     platform: "woocommerce-html",
     roaster: "Flat & White",
     baseUrl: "https://flatnwhite.com",
-    sitemapUrl: "https://flatnwhite.com/product-sitemap.xml",
-    requestDelayMs: 1200,
+    discovery: {
+      kind: "archive",
+      listingUrl: "https://flatnwhite.com/cafe-de-especialidad-flatwhite-argentina/",
+    },
+    shippingPolicy: "Envío gratis desde $90.000",
+    requestDelayMs: 10_000,
     refreshMinutes: 360,
   },
   {
@@ -65,6 +85,7 @@ export const STORES: readonly StoreConfig[] = [
     baseUrl: "https://indigoroasters.com",
     source: "https://indigoroasters.com/productos/",
     pagination: { kind: "query", param: "page" },
+    shippingPolicy: "Envíos gratis en 48 hs",
     refreshMinutes: 60,
   },
   {
@@ -74,6 +95,8 @@ export const STORES: readonly StoreConfig[] = [
     baseUrl: "https://www.momotostadores.com",
     source: "https://www.momotostadores.com/productos/",
     pagination: { kind: "path" },
+    shippingPolicy: "Envío gratis desde $77.000",
+    installmentsPolicy: "3 cuotas sin interés",
     refreshMinutes: 60,
   },
   {
@@ -83,6 +106,7 @@ export const STORES: readonly StoreConfig[] = [
     baseUrl: "https://bunatostadores.com.ar",
     source: "https://bunatostadores.com.ar/productos/",
     pagination: { kind: "query", param: "page" },
+    installmentsPolicy: "3 cuotas sin interés desde $130.000",
     refreshMinutes: 60,
   },
   {
@@ -93,6 +117,59 @@ export const STORES: readonly StoreConfig[] = [
     source: "https://fuegotostadores.com/productos/",
     pagination: { kind: "query", param: "page" },
     refreshMinutes: 60,
+  },
+  {
+    id: "modobarista",
+    platform: "tiendanube",
+    roaster: "Modo Barista",
+    baseUrl: "https://www.modobarista.com",
+    source: "https://www.modobarista.com/cafe-especialidad/",
+    pagination: { kind: "query", param: "page" },
+    gramsFromSku: /(125|250|500)$/,
+    shippingPolicy: "Envío gratis desde $150.000",
+    refreshMinutes: 60,
+  },
+  {
+    id: "kapselmaker",
+    platform: "tiendanube",
+    roaster: "Kapselmaker",
+    baseUrl: "https://kapselmaker.com",
+    source: "https://kapselmaker.com/productos/",
+    pagination: { kind: "query", param: "page" },
+    gramsFromName: true,
+    installmentsPolicy: "3 cuotas sin interés desde $160.000",
+    refreshMinutes: 60,
+  },
+  {
+    id: "johnandjoe",
+    platform: "tiendanube",
+    roaster: "John & Joe",
+    baseUrl: "https://johnandjoe.com.ar",
+    source: "https://johnandjoe.com.ar/productos/",
+    pagination: { kind: "query", param: "page" },
+    shippingPolicy:
+      "Envío gratis CABA y GBA desde $105.000 · resto del país desde $135.000",
+    refreshMinutes: 60,
+  },
+  {
+    id: "indiosverdes",
+    platform: "mercadolibre",
+    roaster: "Café Indios Verdes",
+    baseUrl: "https://listado.mercadolibre.com.ar/tienda/cafe-indios-verdes/",
+    source: "https://listado.mercadolibre.com.ar/tienda/cafe-indios-verdes/",
+    fallbackSource: "https://www.mercadolibre.com.ar/tienda/cafe-indios-verdes",
+    refreshMinutes: 360,
+    requestDelayMs: 3000,
+    expectCoverage: true,
+  },
+  {
+    id: "drupa",
+    platform: "mercadolibre",
+    roaster: "Drupa",
+    baseUrl: "https://www.mercadolibre.com.ar/pagina/tiendafundador",
+    source: "https://www.mercadolibre.com.ar/pagina/tiendafundador",
+    refreshMinutes: 360,
+    requestDelayMs: 3000,
   },
 ];
 

@@ -1,4 +1,4 @@
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import type { NextRequest } from "next/server";
 import { runScrape } from "@/lib/run-scrape";
 import { adaptSupabase, createSupabaseAdmin } from "@/lib/supabase";
@@ -59,7 +59,10 @@ export async function GET(request: NextRequest): Promise<Response> {
     const result = await runScrape({
       stores,
       db: adaptSupabase(createSupabaseAdmin()),
-      onSynced: () => revalidateTag("products", "max"),
+      onSynced: () => {
+        revalidateTag("products", "max");
+        revalidatePath("/");
+      },
     });
 
     const attempted = result.reports.filter((report) => !report.skipped);

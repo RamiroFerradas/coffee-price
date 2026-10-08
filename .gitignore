@@ -44,3 +44,9 @@ next-env.d.ts
 # local tooling
 .atl/
 dev-smoke.log
+.env*.local
+.engram/
+
+# generated audit/test artifacts
+/scripts/out/
+/.vitest/

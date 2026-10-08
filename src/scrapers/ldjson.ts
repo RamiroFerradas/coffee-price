@@ -62,6 +62,14 @@ export function collectProducts(blocks: unknown[]): LdProduct[] {
   return products;
 }
 
+export function productUrl(product: LdProduct): string | null {
+  if (typeof product.url === "string" && product.url) return product.url;
+  const mep = product.mainEntityOfPage;
+  if (typeof mep === "string" && mep) return mep;
+  if (mep && typeof mep === "object" && mep["@id"]) return mep["@id"];
+  return null;
+}
+
 export function gramsFromWeight(weight: unknown): number | null {
   if (!weight || typeof weight !== "object") return null;
   const { unitCode, value } = weight as { unitCode?: unknown; value?: unknown };
