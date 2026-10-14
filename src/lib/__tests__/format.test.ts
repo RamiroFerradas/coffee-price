@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { en } from "@/i18n/dictionaries/en";
+import { es } from "@/i18n/dictionaries/es";
 import type { Product } from "@/lib/types";
 import {
   JUST_NOW_LABEL,
@@ -6,8 +8,7 @@ import {
   bucketGrams,
   formatArs,
   formatGrams,
-  formatGramsLine,
-  formatPerKg,
+  formatPriceBlock,
   formatRelativeTime,
   sortGramValues,
 } from "../format";
@@ -51,16 +52,6 @@ describe("formatArs", () => {
   });
 });
 
-describe("formatPerKg", () => {
-  it("formats price per kilo", () => {
-    expect(formatPerKg(111200)).toBe("$111.200/kg");
-  });
-
-  it("returns null when there is no price per kilo", () => {
-    expect(formatPerKg(null)).toBeNull();
-  });
-});
-
 describe("formatGrams", () => {
   it("formats exact kilos without decimals", () => {
     expect(formatGrams(1000)).toBe("1 kg");
@@ -81,25 +72,62 @@ describe("formatGrams", () => {
   });
 });
 
-describe("formatGramsLine", () => {
-  it("keeps the per-kilo price on exact-kilo products", () => {
-    expect(formatGramsLine(1000, 73500)).toBe("1 kg · $73.500/kg");
-    expect(formatGramsLine(3000, 45000)).toBe("3 kg · $45.000/kg");
+describe("formatPriceBlock", () => {
+  it("shows the per-kilo price as the primary figure with a 1 kg reference", () => {
+    expect(
+      formatPriceBlock(
+        product({ grams: 2800, price: 106600, price_per_kg: 38071 }),
+        es.productCard,
+      ),
+    ).toEqual({
+      perKg: "$38.071",
+      reference: "por 1 kg · total $106.600",
+    });
   });
 
-  it("joins sub-kilo weight with the per-kilo price", () => {
-    expect(formatGramsLine(250, 120000)).toBe("250 g · $120.000/kg");
-    expect(formatGramsLine(2800, 36821)).toBe("2,8 kg · $36.821/kg");
+  it("uses the English labels for the reference line", () => {
+    expect(
+      formatPriceBlock(
+        product({ grams: 1000, price: 73500, price_per_kg: 73500 }),
+        en.productCard,
+      ),
+    ).toEqual({
+      perKg: "$73.500",
+      reference: "per 1 kg · total $73.500",
+    });
   });
 
-  it("falls back to the weight alone when the per-kilo price is missing", () => {
-    expect(formatGramsLine(1000, null)).toBe("1 kg");
-    expect(formatGramsLine(500, null)).toBe("500 g");
+  it("returns null when the weight is unknown", () => {
+    expect(
+      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: null }), es.productCard),
+    ).toBeNull();
+    expect(
+      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: 38071 }), es.productCard),
+    ).toBeNull();
   });
 
-  it("returns null when there is no weight", () => {
-    expect(formatGramsLine(null, 5000)).toBeNull();
-    expect(formatGramsLine(null, null)).toBeNull();
+  it("returns null when the per-kilo price is unknown", () => {
+    expect(
+      formatPriceBlock(product({ grams: 2800, price: 106600, price_per_kg: null }), en.productCard),
+    ).toBeNull();
+  });
+
+  it("keeps zero totals and formats negatives with a leading sign", () => {
+    expect(formatPriceBlock(product({ grams: 1000, price: 0, price_per_kg: 0 }), es.productCard)).toEqual(
+      {
+        perKg: "$0",
+        reference: "por 1 kg · total $0",
+      },
+    );
+    expect(
+      formatPriceBlock(
+        product({ grams: 2800, price: -106600, price_per_kg: -38071 }),
+        es.productCard,
+      ),
+    ).toEqual({
+      perKg: "-$38.071",
+      reference: "por 1 kg · total -$106.600",
+    });
   });
 });
 

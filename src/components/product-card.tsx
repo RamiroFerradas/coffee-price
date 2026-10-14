@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatArs, formatGramsLine } from "@/lib/format";
+import { formatPriceBlock } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { STORES } from "@/scrapers/stores";
 import { defaultLocale, type Locale } from "@/i18n/config";
@@ -81,7 +81,7 @@ export function ProductCard({
     (value, index, all): value is string =>
       value !== null && all.indexOf(value) === index,
   );
-  const weightLine = formatGramsLine(product.grams, product.price_per_kg);
+  const priceBlock = formatPriceBlock(product, labels);
 
   return (
     <a
@@ -134,16 +134,22 @@ export function ProductCard({
           </div>
         ) : null}
 
-        <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
-          <span className="font-mono text-3xl font-semibold tabular-nums leading-none text-accent">
-            {formatArs(product.price)}
-          </span>
-          {weightLine !== null ? (
-            <span className="font-mono text-xs tabular-nums text-muted">{weightLine}</span>
-          ) : null}
-        </div>
+        {priceBlock !== null ? (
+          <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
+            <span className="font-mono text-3xl font-semibold tabular-nums leading-none text-accent">
+              {priceBlock.perKg}
+            </span>
+            <span className="font-mono text-xs tabular-nums text-muted">
+              {priceBlock.reference}
+            </span>
+          </div>
+        ) : null}
 
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-muted transition-colors duration-200 group-hover:text-accent">
+        <span
+          className={`inline-flex items-center gap-1 text-sm font-semibold text-muted transition-colors duration-200 group-hover:text-accent${
+            priceBlock === null ? " mt-auto" : ""
+          }`}
+        >
           {labels.viewOnStore}
           <span
             aria-hidden="true"

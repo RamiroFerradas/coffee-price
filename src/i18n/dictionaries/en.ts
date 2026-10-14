@@ -87,6 +87,8 @@ export const en: Dictionary = {
     },
     freeShipping: "Free shipping",
     viewOnStore: "View on store",
+    perKgRef: "per 1 kg",
+    totalLabel: "total",
   },
   updatedBadge: {
     justUpdated: "Just updated",

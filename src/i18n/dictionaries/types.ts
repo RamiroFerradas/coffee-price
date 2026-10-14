@@ -51,6 +51,8 @@ export interface Dictionary {
     grind: Record<string, string>;
     freeShipping: string;
     viewOnStore: string;
+    perKgRef: string;
+    totalLabel: string;
   };
   updatedBadge: {
     justUpdated: string;

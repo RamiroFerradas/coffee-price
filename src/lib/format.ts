@@ -49,22 +49,31 @@ export function formatArs(value: number): string {
   return ARS_FORMATTER.format(value).replace(/\s/g, "");
 }
 
-export function formatPerKg(pricePerKg: number | null): string | null {
-  if (pricePerKg === null) return null;
-  return `${formatArs(pricePerKg)}/kg`;
-}
-
 export function formatGrams(grams: number): string {
   if (grams < 1000) return `${grams} g`;
   if (grams % 1000 === 0) return `${grams / 1000} kg`;
   return `${(grams / 1000).toLocaleString("es-AR")} kg`;
 }
 
-export function formatGramsLine(grams: number | null, pricePerKg: number | null): string | null {
-  if (grams === null) return null;
-  const weight = formatGrams(grams);
-  const perKg = formatPerKg(pricePerKg);
-  return perKg === null ? weight : `${weight} · ${perKg}`;
+export interface PriceBlockLabels {
+  perKgRef: string;
+  totalLabel: string;
+}
+
+export interface PriceBlock {
+  perKg: string;
+  reference: string;
+}
+
+export function formatPriceBlock(
+  product: Pick<Product, "grams" | "price" | "price_per_kg">,
+  labels: PriceBlockLabels,
+): PriceBlock | null {
+  if (product.grams === null || product.price_per_kg === null) return null;
+  return {
+    perKg: formatArs(product.price_per_kg),
+    reference: `${labels.perKgRef} · ${labels.totalLabel} ${formatArs(product.price)}`,
+  };
 }
 
 export function formatRelativeTime(
