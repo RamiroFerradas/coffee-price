@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { type Locale } from "@/i18n/config";
 import { getDictionary } from "@/i18n/dictionaries";
 
-export const SITE_URL = "https://quierocafe.vercel.app";
+export const SITE_URL = "https://www.quierocafe.shop";
 export const SITE_NAME = "Quiero Café";
 
 export function buildMetadata(locale: Locale): Metadata {

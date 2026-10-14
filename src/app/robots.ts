@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: "/api/",
     },
-    sitemap: "https://quierocafe.vercel.app/sitemap.xml",
+    sitemap: "https://www.quierocafe.shop/sitemap.xml",
   };
 }
