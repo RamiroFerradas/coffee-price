@@ -18,11 +18,13 @@ const STORE_IDS: StoreId[] = [
   "indiosverdes",
   "drupa",
   "republicadelcafe",
+  "cofijaus",
 ];
 
 const MIN_ROWS: Partial<Record<StoreId, number>> = {
   flatnwhite: 4,
   republicadelcafe: 4,
+  cofijaus: 20,
   johnandjoe: 40,
   kapselmaker: 100,
   indiosverdes: 50,

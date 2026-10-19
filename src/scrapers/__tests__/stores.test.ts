@@ -7,6 +7,7 @@ describe("STORES registry", () => {
     expect(STORES.map((s) => s.id).sort()).toEqual([
       "bunatostadores",
       "cafedelirante",
+      "cofijaus",
       "drupa",
       "flatnwhite",
       "fuegotostadores",
@@ -37,6 +38,18 @@ describe("STORES registry", () => {
       refreshMinutes: 60,
       source: "https://cafedelirante.com.ar/wp-json/wc/store/v1/products?per_page=100",
       excludeCategories: expect.arrayContaining(["Accesorios", "Suscripciones"]),
+    });
+  });
+
+  it("configures cofijaus as woocommerce-api scoped to the coffee categories", () => {
+    const store = getStore("cofijaus");
+    expect(store.platform).toBe("woocommerce-api");
+    expect(store).toMatchObject({
+      roaster: "Cofi Jaus",
+      baseUrl: "https://cofijaus.com.ar",
+      refreshMinutes: 60,
+      source: "https://cofijaus.com.ar/wp-json/wc/store/v1/products?per_page=100",
+      excludeCategories: expect.arrayContaining(["Té", "Cursos", "Pasteleria", "Box"]),
     });
   });
 

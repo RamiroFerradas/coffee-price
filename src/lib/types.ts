@@ -10,7 +10,8 @@ export type StoreId =
   | "johnandjoe"
   | "indiosverdes"
   | "drupa"
-  | "republicadelcafe";
+  | "republicadelcafe"
+  | "cofijaus";
 
 export interface Product {
   id: string;

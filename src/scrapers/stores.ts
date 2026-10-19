@@ -54,6 +54,8 @@ const CAFE_DELIRANTE_EXCLUDES = [
   "Suscripciones",
 ] as const;
 
+const COFIJAUS_EXCLUDES = ["Cursos", "Pasteleria", "Box", "Té"] as const;
+
 export const STORES: readonly StoreConfig[] = [
   {
     id: "cafedelirante",
@@ -63,6 +65,15 @@ export const STORES: readonly StoreConfig[] = [
     source: "https://cafedelirante.com.ar/wp-json/wc/store/v1/products?per_page=100",
     refreshMinutes: 60,
     excludeCategories: CAFE_DELIRANTE_EXCLUDES,
+  },
+  {
+    id: "cofijaus",
+    platform: "woocommerce-api",
+    roaster: "Cofi Jaus",
+    baseUrl: "https://cofijaus.com.ar",
+    source: "https://cofijaus.com.ar/wp-json/wc/store/v1/products?per_page=100",
+    refreshMinutes: 60,
+    excludeCategories: COFIJAUS_EXCLUDES,
   },
   {
     id: "flatnwhite",

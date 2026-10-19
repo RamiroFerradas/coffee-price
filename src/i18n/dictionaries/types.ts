@@ -1,5 +1,18 @@
 import type { CategoryFilter, SortKey } from "@/lib/filter-catalog";
 
+export interface TrustSection {
+  heading: string;
+  paragraphs: string[];
+}
+
+export interface TrustPageContent {
+  metaTitle: string;
+  metaDescription: string;
+  title: string;
+  intro: string;
+  sections: TrustSection[];
+}
+
 export interface Dictionary {
   meta: {
     title: string;
@@ -27,6 +40,19 @@ export interface Dictionary {
   };
   footer: {
     description: string;
+    disclaimer: string;
+    links: {
+      about: string;
+      contact: string;
+      privacy: string;
+      terms: string;
+    };
+  };
+  trust: {
+    about: TrustPageContent;
+    contact: TrustPageContent;
+    privacy: TrustPageContent;
+    terms: TrustPageContent;
   };
   catalog: {
     sectionAria: string;

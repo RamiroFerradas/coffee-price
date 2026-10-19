@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { getCatalog, getCatalogMeta } from "@/lib/catalog";
 import { Catalog } from "@/components/catalog";
+import { SiteFooter } from "@/components/site-footer";
 import { STORES } from "@/scrapers/stores";
 import { isLocale, locales, type Locale } from "@/i18n/config";
 import { getDictionary, type Dictionary } from "@/i18n/dictionaries";
@@ -136,16 +137,7 @@ export default async function LocalePage({ params }: PageProps<"/[locale]">) {
         )}
       </main>
 
-      <footer className="border-t border-line bg-surface">
-        <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-4 py-8 sm:px-6">
-          <p className="font-display text-sm font-semibold uppercase tracking-[0.2em] text-foreground">
-            Quiero Cafe
-          </p>
-          <p className="max-w-2xl text-sm leading-relaxed text-muted">
-            {dict.footer.description}
-          </p>
-        </div>
-      </footer>
+      <SiteFooter locale={locale} />
     </div>
   );
 }

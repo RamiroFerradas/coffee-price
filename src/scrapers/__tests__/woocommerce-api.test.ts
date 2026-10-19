@@ -116,6 +116,38 @@ describe("scrapeWooApi", () => {
     expect(rows[0]).toMatchObject({ external_id: "SINGLE-1", grams: 250, price: 24000 });
   });
 
+  it("fallbacks to the product name and then the API weight for grammage", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        {
+          ...base,
+          id: 9701,
+          sku: "NAME-1",
+          name: "Colombia Tolima – 250 GRS",
+          attributes: [],
+          variations: [],
+          weight: "0.5",
+        },
+        {
+          ...base,
+          id: 9702,
+          sku: "WEIGHT-1",
+          name: "Brasil Descafeinado- 250",
+          attributes: [],
+          variations: [],
+          weight: "0.25",
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    // The name wins over the (shipping) weight.
+    expect(rowsByName(rows, "Colombia Tolima")[0].grams).toBe(250);
+    // With no grammage in the name, the API weight ("0.25" kg) is used.
+    expect(rowsByName(rows, "Brasil Descafeinado")[0].grams).toBe(250);
+  });
+
   it("takes the default weight term on parent rows that also carry other attributes", async () => {
     const molienda = {
       name: "Elegí tu Molienda",
@@ -192,6 +224,25 @@ describe("scrapeWooApi", () => {
     const prices = rows.map((row) => row.price);
     expect(prices).toContain(42900);
     expect(prices).not.toContain(429);
+  });
+
+  it("scales prices down when currency_minor_unit is 2", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        {
+          ...base,
+          variations: [],
+          sku: "CENTS-1",
+          name: "Café Centavos 250 GRS",
+          prices: { price: "7310000", currency_minor_unit: 2 },
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].price).toBe(73100);
   });
 
   it("reads prices.price as the current price when regular_price is higher", async () => {
