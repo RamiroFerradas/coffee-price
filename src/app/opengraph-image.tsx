@@ -1,4 +1,5 @@
 import { ImageResponse } from "next/og";
+import { STORES } from "@/scrapers/stores";
 
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
@@ -42,7 +43,7 @@ export default function OpengraphImage() {
           <span style={{ color: "#c04106" }}>Cafe</span>
         </div>
         <div style={{ fontSize: 42, color: "#6e6154", marginTop: 24 }}>
-          Café de especialidad de 11 tostadores argentinos
+          {`Café de especialidad de ${STORES.length} tostadores argentinos`}
         </div>
         <div
           style={{

@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { runScrape } from "@/lib/run-scrape";
 import type { RawProduct, StoreId } from "@/lib/types";
+import { STORES } from "@/scrapers/stores";
 import { createFakeDb } from "./fake-db";
 
 const NOW = new Date("2026-01-15T12:00:00.000Z");
@@ -11,23 +12,12 @@ function isoMinutesAgo(minutes: number): string {
 
 const FRESH = isoMinutesAgo(5);
 
+const STORE_COUNT = STORES.length;
+
 function freshRows(except: Partial<Record<StoreId, number>> = {}) {
-  const ids: StoreId[] = [
-    "cafedelirante",
-    "flatnwhite",
-    "indigoroasters",
-    "momotostadores",
-    "bunatostadores",
-    "fuegotostadores",
-    "modobarista",
-    "kapselmaker",
-    "johnandjoe",
-    "indiosverdes",
-    "drupa",
-  ];
-  return ids.map((store) => ({
-    store,
-    fetched_at: except[store] !== undefined ? isoMinutesAgo(except[store]!) : FRESH,
+  return STORES.map((store) => ({
+    store: store.id,
+    fetched_at: except[store.id] !== undefined ? isoMinutesAgo(except[store.id]!) : FRESH,
   }));
 }
 
@@ -55,7 +45,7 @@ describe("runScrape", () => {
     const result = await runScrape({ now: NOW, db: fake.db, scrape, onSynced });
 
     expect(scrape).not.toHaveBeenCalled();
-    expect(result.reports).toHaveLength(11);
+    expect(result.reports).toHaveLength(STORE_COUNT);
     expect(result.reports.every((r) => r.skipped === true && r.ok === false)).toBe(true);
     expect(result.totalProducts).toBe(0);
     expect(result.syncRan).toBe(false);
@@ -76,7 +66,7 @@ describe("runScrape", () => {
     const report = result.reports.find((r) => r.store === "cafedelirante");
     expect(report).toMatchObject({ ok: true, count: 1 });
     expect(report?.durationMs).toBeGreaterThanOrEqual(0);
-    expect(result.reports.filter((r) => r.skipped)).toHaveLength(10);
+    expect(result.reports.filter((r) => r.skipped)).toHaveLength(STORE_COUNT - 1);
     expect(result.totalProducts).toBe(1);
     expect(result.syncRan).toBe(true);
     expect(onSynced).toHaveBeenCalledTimes(1);
@@ -190,7 +180,7 @@ describe("runScrape", () => {
     expect(scrape).toHaveBeenCalledTimes(1);
     const [first, ...remaining] = result.reports;
     expect(first).toMatchObject({ ok: true, count: 1 });
-    expect(remaining).toHaveLength(10);
+    expect(remaining).toHaveLength(STORE_COUNT - 1);
     expect(
       remaining.every((r) => r.skipped === true && r.error === "budget-exceeded"),
     ).toBe(true);

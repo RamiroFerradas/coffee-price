@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { dueStores, getLastSyncedMap } from "@/lib/refresh";
+import { STORES } from "@/scrapers/stores";
 
 const NOW = new Date("2026-01-15T12:00:00.000Z");
 
@@ -9,19 +10,8 @@ function minutesAgo(minutes: number): Date {
 
 describe("dueStores", () => {
   it("marks every store due when nothing has been synced yet", () => {
-    expect(dueStores(NOW, {}).map((store) => store.id).sort()).toEqual([
-      "bunatostadores",
-      "cafedelirante",
-      "drupa",
-      "flatnwhite",
-      "fuegotostadores",
-      "indigoroasters",
-      "indiosverdes",
-      "johnandjoe",
-      "kapselmaker",
-      "modobarista",
-      "momotostadores",
-    ]);
+    const expected = STORES.map((store) => store.id).sort();
+    expect(dueStores(NOW, {}).map((store) => store.id).sort()).toEqual(expected);
   });
 
   it("skips a store synced inside its refresh window", () => {

@@ -150,6 +150,15 @@ export const STORES: readonly StoreConfig[] = [
     refreshMinutes: 60,
   },
   {
+    id: "republicadelcafe",
+    platform: "tiendanube",
+    roaster: "República del Café",
+    baseUrl: "https://www.republicadelcafe.com.ar",
+    source: "https://www.republicadelcafe.com.ar/cafe-tostado-natural/",
+    pagination: { kind: "query", param: "page" },
+    refreshMinutes: 60,
+  },
+  {
     id: "indiosverdes",
     platform: "mercadolibre",
     roaster: "Café Indios Verdes",

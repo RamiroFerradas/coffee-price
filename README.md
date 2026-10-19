@@ -1,6 +1,6 @@
 # coffee-price
 
-Argentine specialty-coffee price aggregator. It collects product listings from 11 Argentine stores (specialty roasters plus their MercadoLibre shops), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. A daily Vercel cron (plus on-demand runs) scrapes and upserts rows; the web UI reads them back.
+Argentine specialty-coffee price aggregator. It collects product listings from 12 Argentine stores (specialty roasters plus their MercadoLibre shops), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. A daily Vercel cron (plus on-demand runs) scrapes and upserts rows; the web UI reads them back.
 
 ## Stack
 
@@ -81,11 +81,11 @@ src/
     format.ts             ARS currency, relative time (es-AR)
     normalize.ts          parseGrams, parseArsPrice, pricePerKg
   scrapers/
-    stores.ts             registry: 11 stores, source URLs, refresh intervals
+    stores.ts             registry: 12 stores, source URLs, refresh intervals
     http.ts               fetch wrapper: browser UA, timeout, retries, delay
     woocommerce-api.ts    Café Delirante (Woo Store API)
     woocommerce-html.ts   Flat&White (product sitemap + JSON-LD; robots-safe)
-    tiendanube.ts         Indigo, Momo, Buna, Fuego, Modo Barista, Kapselmaker, John & Joe (listing JSON-LD + pagination)
+    tiendanube.ts         Indigo, Momo, Buna, Fuego, Modo Barista, Kapselmaker, John & Joe, República del Café (listing JSON-LD + pagination)
     mercadolibre.ts       Café Indios Verdes, Drupa (card HTML, Googlebot UA)
     enrich.ts             origin/variety/category/grind/equipment heuristics
     index.ts              scrapeStore(id) dispatcher
@@ -103,4 +103,4 @@ vitest.config.ts          node environment, src/**/*.test.ts
 | `npm run lint` | Run ESLint |
 | `npm test` | Run the test suite once (offline fixtures only) |
 | `npm run test:watch` | Run tests in watch mode |
-| `LIVE=1 npx vitest run src/scrapers/__tests__/live.test.ts` | Live smoke against the 11 real stores (~2 min) |
+| `LIVE=1 npx vitest run src/scrapers/__tests__/live.test.ts` | Live smoke against the 12 real stores (~2 min) |

@@ -16,6 +16,7 @@ describe("STORES registry", () => {
       "kapselmaker",
       "modobarista",
       "momotostadores",
+      "republicadelcafe",
     ] satisfies StoreId[]);
   });
 
@@ -88,6 +89,13 @@ describe("STORES registry", () => {
     expect(getStore("johnandjoe")).toMatchObject({
       platform: "tiendanube",
       pagination: { kind: "query", param: "page" },
+    });
+    expect(getStore("republicadelcafe")).toMatchObject({
+      platform: "tiendanube",
+      roaster: "República del Café",
+      source: "https://www.republicadelcafe.com.ar/cafe-tostado-natural/",
+      pagination: { kind: "query", param: "page" },
+      refreshMinutes: 60,
     });
   });
 

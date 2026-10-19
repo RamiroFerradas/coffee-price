@@ -9,7 +9,8 @@ export type StoreId =
   | "kapselmaker"
   | "johnandjoe"
   | "indiosverdes"
-  | "drupa";
+  | "drupa"
+  | "republicadelcafe";
 
 export interface Product {
   id: string;
