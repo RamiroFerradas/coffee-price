@@ -227,7 +227,7 @@ export const en: Dictionary = {
     },
     freeShipping: "Free shipping",
     viewOnStore: "View on store",
-    perKgRef: "per 1 kg",
+    perKgRef: "per kg",
   },
   updatedBadge: {
     justUpdated: "Just updated",

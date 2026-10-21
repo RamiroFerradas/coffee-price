@@ -79,6 +79,7 @@ describe("formatPriceBlock", () => {
     ).toEqual({
       price: "$106.600",
       perKg: "$38.071",
+      weight: "2,8 kg",
     });
   });
 
@@ -90,6 +91,31 @@ describe("formatPriceBlock", () => {
     ).toEqual({
       price: "$73.500",
       perKg: "$73.500",
+      weight: "1 kg",
+    });
+  });
+
+  it("labels the block with the product weight so variants stay distinguishable", () => {
+    expect(
+      formatPriceBlock(product({ grams: 250, price: 10500, price_per_kg: 42000 })),
+    ).toEqual({
+      price: "$10.500",
+      perKg: "$42.000",
+      weight: "250 g",
+    });
+    expect(
+      formatPriceBlock(product({ grams: 500, price: 16500, price_per_kg: 33000 })),
+    ).toEqual({
+      price: "$16.500",
+      perKg: "$33.000",
+      weight: "500 g",
+    });
+    expect(
+      formatPriceBlock(product({ grams: 1000, price: 29000, price_per_kg: 29000 })),
+    ).toEqual({
+      price: "$29.000",
+      perKg: "$29.000",
+      weight: "1 kg",
     });
   });
 
@@ -112,6 +138,7 @@ describe("formatPriceBlock", () => {
     expect(formatPriceBlock(product({ grams: 1000, price: 0, price_per_kg: 0 }))).toEqual({
       price: "$0",
       perKg: "$0",
+      weight: "1 kg",
     });
     expect(
       formatPriceBlock(
@@ -120,6 +147,7 @@ describe("formatPriceBlock", () => {
     ).toEqual({
       price: "-$106.600",
       perKg: "-$38.071",
+      weight: "2,8 kg",
     });
   });
 });

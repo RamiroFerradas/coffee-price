@@ -58,6 +58,7 @@ export function formatGrams(grams: number): string {
 export interface PriceBlock {
   price: string;
   perKg: string;
+  weight: string;
 }
 
 export function formatPriceBlock(
@@ -67,6 +68,7 @@ export function formatPriceBlock(
   return {
     price: formatArs(product.price),
     perKg: formatArs(product.price_per_kg),
+    weight: formatGrams(product.grams),
   };
 }
 

@@ -140,7 +140,7 @@ export function ProductCard({
               {priceBlock.price}
             </span>
             <span className="font-mono text-xs tabular-nums text-muted">
-              {`${priceBlock.perKg} ${labels.perKgRef}`}
+              {`${priceBlock.weight} · ${priceBlock.perKg} ${labels.perKgRef}`}
             </span>
           </div>
         ) : null}
