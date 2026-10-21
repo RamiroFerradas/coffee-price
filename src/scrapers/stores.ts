@@ -161,6 +161,15 @@ export const STORES: readonly StoreConfig[] = [
     refreshMinutes: 60,
   },
   {
+    id: "chiquitito",
+    platform: "tiendanube",
+    roaster: "Chiquitito Café",
+    baseUrl: "https://chiquitito.cafe",
+    source: "https://chiquitito.cafe/especialidad/",
+    pagination: { kind: "query", param: "page" },
+    refreshMinutes: 60,
+  },
+  {
     id: "republicadelcafe",
     platform: "tiendanube",
     roaster: "República del Café",

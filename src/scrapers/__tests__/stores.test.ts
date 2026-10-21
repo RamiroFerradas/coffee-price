@@ -7,6 +7,7 @@ describe("STORES registry", () => {
     expect(STORES.map((s) => s.id).sort()).toEqual([
       "bunatostadores",
       "cafedelirante",
+      "chiquitito",
       "cofijaus",
       "drupa",
       "flatnwhite",
@@ -103,6 +104,10 @@ describe("STORES registry", () => {
       platform: "tiendanube",
       pagination: { kind: "query", param: "page" },
     });
+    expect(getStore("chiquitito")).toMatchObject({
+      platform: "tiendanube",
+      pagination: { kind: "query", param: "page" },
+    });
     expect(getStore("republicadelcafe")).toMatchObject({
       platform: "tiendanube",
       roaster: "República del Café",
@@ -158,6 +163,10 @@ describe("STORES registry", () => {
     });
     expect(getStore("johnandjoe")).toMatchObject({
       source: "https://johnandjoe.com.ar/productos/",
+    });
+    expect(getStore("chiquitito")).toMatchObject({
+      // Coffee category listing: skips the gorra and suscripciones listings.
+      source: "https://chiquitito.cafe/especialidad/",
     });
   });
 

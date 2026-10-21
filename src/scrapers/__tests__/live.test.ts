@@ -19,6 +19,7 @@ const STORE_IDS: StoreId[] = [
   "drupa",
   "republicadelcafe",
   "cofijaus",
+  "chiquitito",
 ];
 
 const MIN_ROWS: Partial<Record<StoreId, number>> = {
