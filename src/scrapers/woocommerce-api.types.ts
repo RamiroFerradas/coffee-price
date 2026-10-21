@@ -33,6 +33,7 @@ export interface WooProduct {
   attributes?: WooAttribute[];
   variations?: WooVariationRef[];
   weight?: unknown;
+  description?: string;
   images?: { src?: string }[];
   categories?: { name?: string }[];
   short_description?: string;

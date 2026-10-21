@@ -385,41 +385,100 @@ describe("scrapeWooApi", () => {
     expect(rows[0]).toMatchObject({ external_id: "DRIP7", grams: 165, price: 27000 });
   });
 
-  it("applies the combo grams overrides with each combo's real total weight", async () => {
+  it("derives combo total grams from the store description", async () => {
     const cofijaus = getStore("cofijaus") as WooApiStore;
-    const combo = (id: number, slug: string, name: string, weight: string) => ({
+    const filler = "Altura: 1.950 - 2.300 msnm. Cultivar: 50% Colombia 50% Brasil. 0,5 l de agua.";
+    const combo = (
+      id: number,
+      slug: string,
+      name: string,
+      weight: string,
+      description: string,
+    ) => ({
       id,
       name,
       slug,
       sku: "",
+      description,
       permalink: `https://cofijaus.com.ar/producto/${slug}/`,
-      prices: { price: String(0), currency_minor_unit: 2 },
+      prices: { price: "5360000", currency_minor_unit: 2 },
       attributes: [],
       variations: [],
       weight,
       is_in_stock: true,
     });
     const products = [
-      combo(7307, "combo-250grs", "COMBO 250 GRS COLOMBIA Y ETHIOPIA", "0.25"),
-      combo(8096, "combo-250-grs-brasil-y-bolivia", "COMBO 250 GRS BRASIL Y BOLIVIA", "0.25"),
-      combo(8089, "combo-250-grs-ethiopia-y-brasil", "COMBO 250 GRS  ETHIOPIA Y BRASIL", "0.25"),
-      combo(7294, "combo-500grs", "COMBO 500 GRS BRASIL Y COLOMBIA", "0.5"),
-      combo(8082, "combo-500-grs-colombia-y-ethiopia", "COMBO 500 GRS COLOMBIA Y ETHIOPIA", "0.5"),
-      combo(8075, "combo-500-grs-blend-y-ethiopia", "COMBO 500 GRS BLEND Y ETHIOPIA", "0.5"),
-      combo(7282, "combo-favoritos-kilo", "COMBO 1 KG COLOMBIA Y ETHIOPIA", "1"),
-      combo(8059, "combo-1-kg-colombia-y-blend", "COMBO 1 KG COLOMBIA Y BLEND", "1"),
-      combo(8052, "combo-1-kg-ethiopia-y-brasil", "COMBO 1 KG ETHIOPIA Y BRASIL", "1"),
-    ].map((product) => ({
-      ...product,
-      // 250 g combos ship 2 x 250 g bags (500 g total), 500 g combos 2 x 500 g
-      // (1 kg total) and 1 kg combos 2 x 1 kg (2 kg total).
-      prices: { price: "5360000", currency_minor_unit: 2 },
-    }));
+      combo(7307, "combo-250grs", "COMBO 250 GRS COLOMBIA Y ETHIOPIA", "0.25",
+        `¿Qué estas eligiendo? Incluye 250grs de Colombia+ 250grs de Ethiopia. ${filler}`),
+      combo(8096, "combo-250-grs-brasil-y-bolivia", "COMBO 250 GRS BRASIL Y BOLIVIA", "0.25",
+        `Incluye 250grs de Brasil+ 250grs de Bolivia, dos perfiles. ${filler}`),
+      combo(8089, "combo-250-grs-ethiopia-y-brasil", "COMBO 250 GRS  ETHIOPIA Y BRASIL", "0.25",
+        `Incluye 250grs de Ethiopia+ 250grs de Brasil. ${filler}`),
+      combo(7294, "combo-500grs", "COMBO 500 GRS BRASIL Y COLOMBIA", "0.5",
+        `Incluye 500grs de Brasil+ 500grs de Colombia. ${filler}`),
+      combo(8082, "combo-500-grs-colombia-y-ethiopia", "COMBO 500 GRS COLOMBIA Y ETHIOPIA", "0.5",
+        `Incluye 500grs de Colombia Tolima+ 500grs de Ethiopia. ${filler}`),
+      combo(8075, "combo-500-grs-blend-y-ethiopia", "COMBO 500 GRS BLEND Y ETHIOPIA", "0.5",
+        `Incluye 500grs de Blend+ 500grs de Ethiopia. ${filler}`),
+      combo(7282, "combo-favoritos-kilo", "COMBO 1 KG COLOMBIA Y ETHIOPIA", "1",
+        `Incluye 1kg de Colombia+ 1kg de Ethiopia. ${filler}`),
+      combo(8059, "combo-1-kg-colombia-y-blend", "COMBO 1 KG COLOMBIA Y BLEND", "1",
+        `Incluye 1kg de Colombia Tolima+ 1kg de Blend Colombia-Brasil. ${filler}`),
+      combo(8052, "combo-1-kg-ethiopia-y-brasil", "COMBO 1 KG ETHIOPIA Y BRASIL", "1",
+        `Incluye 1kg de Ethiopia + 1kg de Brasil. ${filler}`),
+    ];
     const fetchFn = makeFetch({ [cofijaus.source]: products });
     const rows = await scrapeWooApi(cofijaus, { fetchFn });
 
+    // 250 g combos ship 2 x 250 g bags (500 g total), 500 g combos 2 x 500 g
+    // (1 kg total) and 1 kg combos 2 x 1 kg (2 kg total).
     expect(rows.map((row) => row.grams).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([
       500, 500, 500, 1000, 1000, 1000, 2000, 2000, 2000,
     ]);
+  });
+
+  it("derives sachet-box totals from the description", async () => {
+    const cofijaus = getStore("cofijaus") as WooApiStore;
+    const dripBag = {
+      id: 3728,
+      name: "Drip Bag Colombia Tolima",
+      slug: "drip-bag-colombia-tolima",
+      sku: "",
+      description:
+        "Llevá la experiencia de un café de especialidad a cualquier lugar. Caja x 10 sobres de 16,5gr",
+      permalink: "https://cofijaus.com.ar/producto/drip-bag-colombia-tolima/",
+      prices: { price: "2700000", currency_minor_unit: 2 },
+      attributes: [],
+      variations: [],
+      weight: "0.5",
+      is_in_stock: true,
+    };
+    const fetchFn = makeFetch({ [cofijaus.source]: [dripBag] });
+    const rows = await scrapeWooApi(cofijaus, { fetchFn });
+
+    // 10 sobres de 16,5 g: the description states the real coffee weight.
+    expect(rows[0]).toMatchObject({ external_id: "drip-bag-colombia-tolima", grams: 165 });
+  });
+
+  it("ignores single weight mentions and non-incluye descriptions", async () => {
+    const cofijaus = getStore("cofijaus") as WooApiStore;
+    const product = {
+      id: 9999,
+      name: "Colombia Tolima - 1KG",
+      slug: "colombia-tolima-1kg",
+      sku: "",
+      description: "Perfil de taza jugoso durazno y fresca naranja. Altura 1.950 msnm.",
+      permalink: "https://cofijaus.com.ar/producto/colombia-tolima-1kg/",
+      prices: { price: "7480000", currency_minor_unit: 2 },
+      attributes: [],
+      variations: [],
+      weight: "0.5",
+      is_in_stock: true,
+    };
+    const fetchFn = makeFetch({ [cofijaus.source]: [product] });
+    const rows = await scrapeWooApi(cofijaus, { fetchFn });
+
+    // Falls through to the name, which states 1 KG.
+    expect(rows[0]).toMatchObject({ external_id: "colombia-tolima-1kg", grams: 1000 });
   });
 });

@@ -61,23 +61,10 @@ const COFIJAUS_EXCLUDES = ["Cursos", "Pasteleria", "Box", "Té"] as const;
 
 // The Drip Bag is a box of 10 x 16.5 g sachets (165 g of coffee), but the API
 // reports the box's shipping weight (0.5 kg), which would sort it as the
-// cheapest per-kg coffee on the site.
-//
-// Combo names name the weight of EACH coffee ("Incluye 250grs de Brasil +
-// 250grs de Bolivia" = 500 g of coffee in total), but the API weight matches
-// the name, so their per-kg price would be doubled. Verified against the
-// store's Woo API descriptions on 2026-10-21.
+// cheapest per-kg coffee on the site. Combo totals no longer need overrides:
+// gramsFromDescription reads them from the store's own description.
 const COFIJAUS_GRAMS_OVERRIDES: Readonly<Record<string, number>> = {
   DRIP7: 165,
-  "combo-250grs": 500,
-  "combo-250-grs-brasil-y-bolivia": 500,
-  "combo-250-grs-ethiopia-y-brasil": 500,
-  "combo-500grs": 1000,
-  "combo-500-grs-colombia-y-ethiopia": 1000,
-  "combo-500-grs-blend-y-ethiopia": 1000,
-  "combo-favoritos-kilo": 2000,
-  "combo-1-kg-colombia-y-blend": 2000,
-  "combo-1-kg-ethiopia-y-brasil": 2000,
 };
 
 export const STORES: readonly StoreConfig[] = [

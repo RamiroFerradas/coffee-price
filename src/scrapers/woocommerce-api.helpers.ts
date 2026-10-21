@@ -147,17 +147,57 @@ function gramsFromWooWeight(weight: unknown): number | null {
   return Math.round(value * 1000);
 }
 
+const WEIGHT_AMOUNT = /(\d+(?:[.,]\d+)?)\s*(kgs?|kilos?|grs?|gramos?|g)\b/gi;
+
+function amountToGrams(amount: string, unit: string): number | null {
+  const value = Number.parseFloat(amount.replace(",", "."));
+  if (!Number.isFinite(value) || value <= 0) return null;
+  return /^\s*k/i.test(unit) ? value * 1000 : value;
+}
+
+// A combo's name states the weight of EACH coffee (e.g. "COMBO 250 GRS" with
+// description "Incluye 250grs de Brasil + 250grs de Bolivia" = 500 g of coffee
+// in total), and some shops ship sachet boxes ("Caja x 10 sobres de 16,5gr").
+// Both state the real total in the description, which beats the name.
+export function gramsFromDescription(description?: string | null): number | null {
+  if (!description) return null;
+
+  const text = decodeHtmlEntities(description);
+  const sachets = /(\d+)\s*sobres?\s*de\s*(\d+(?:[.,]\d+)?)\s*g/i.exec(text);
+  if (sachets) {
+    const count = Number.parseInt(sachets[1] ?? "", 10);
+    const perSachet = amountToGrams(sachets[2] ?? "", "g");
+    if (count > 0 && perSachet != null) return Math.round(count * perSachet);
+  }
+
+  if (!/\bincluye\b/i.test(text)) return null;
+  const amounts = [...text.matchAll(WEIGHT_AMOUNT)];
+  if (amounts.length < 2) return null;
+  let total = 0;
+  let found = 0;
+  for (const match of amounts) {
+    const grams = amountToGrams(match[1] ?? "", match[2] ?? "");
+    if (grams == null) continue;
+    total += grams;
+    found += 1;
+  }
+  return found >= 2 && total > 0 ? Math.round(total) : null;
+}
+
 export function parentRow(config: WooApiStore, product: WooProduct, peso?: WooAttribute): RawProduct | null {
   const price = wooPrice(product.prices);
   if (price == null || price <= 0) return null;
 
   // Some shops (e.g. Cofi Jaus) encode grammage in the product name instead of a
-  // weight attribute; the API weight is the last resort. A store-level override
-  // wins over all of them for products whose API weight is a shipping weight.
+  // weight attribute; combo quantities and sachet boxes state the real total in
+  // the description, and the API weight is the last resort. A store-level
+  // override wins over all of them for products whose API weight is a shipping
+  // weight.
   const override = config.gramsOverrides?.[baseExternalId(product)];
   const grams =
     override ??
     gramsFromAttribute(peso) ??
+    gramsFromDescription(product.description) ??
     parseGrams(product.name ?? "") ??
     gramsFromWooWeight(product.weight);
 
