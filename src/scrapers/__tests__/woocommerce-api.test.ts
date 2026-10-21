@@ -384,4 +384,42 @@ describe("scrapeWooApi", () => {
     // 10 sobres de 16,5 g: the API "0.5" is the box weight, not the coffee.
     expect(rows[0]).toMatchObject({ external_id: "DRIP7", grams: 165, price: 27000 });
   });
+
+  it("applies the combo grams overrides with each combo's real total weight", async () => {
+    const cofijaus = getStore("cofijaus") as WooApiStore;
+    const combo = (id: number, slug: string, name: string, weight: string) => ({
+      id,
+      name,
+      slug,
+      sku: "",
+      permalink: `https://cofijaus.com.ar/producto/${slug}/`,
+      prices: { price: String(0), currency_minor_unit: 2 },
+      attributes: [],
+      variations: [],
+      weight,
+      is_in_stock: true,
+    });
+    const products = [
+      combo(7307, "combo-250grs", "COMBO 250 GRS COLOMBIA Y ETHIOPIA", "0.25"),
+      combo(8096, "combo-250-grs-brasil-y-bolivia", "COMBO 250 GRS BRASIL Y BOLIVIA", "0.25"),
+      combo(8089, "combo-250-grs-ethiopia-y-brasil", "COMBO 250 GRS  ETHIOPIA Y BRASIL", "0.25"),
+      combo(7294, "combo-500grs", "COMBO 500 GRS BRASIL Y COLOMBIA", "0.5"),
+      combo(8082, "combo-500-grs-colombia-y-ethiopia", "COMBO 500 GRS COLOMBIA Y ETHIOPIA", "0.5"),
+      combo(8075, "combo-500-grs-blend-y-ethiopia", "COMBO 500 GRS BLEND Y ETHIOPIA", "0.5"),
+      combo(7282, "combo-favoritos-kilo", "COMBO 1 KG COLOMBIA Y ETHIOPIA", "1"),
+      combo(8059, "combo-1-kg-colombia-y-blend", "COMBO 1 KG COLOMBIA Y BLEND", "1"),
+      combo(8052, "combo-1-kg-ethiopia-y-brasil", "COMBO 1 KG ETHIOPIA Y BRASIL", "1"),
+    ].map((product) => ({
+      ...product,
+      // 250 g combos ship 2 x 250 g bags (500 g total), 500 g combos 2 x 500 g
+      // (1 kg total) and 1 kg combos 2 x 1 kg (2 kg total).
+      prices: { price: "5360000", currency_minor_unit: 2 },
+    }));
+    const fetchFn = makeFetch({ [cofijaus.source]: products });
+    const rows = await scrapeWooApi(cofijaus, { fetchFn });
+
+    expect(rows.map((row) => row.grams).sort((a, b) => (a ?? 0) - (b ?? 0))).toEqual([
+      500, 500, 500, 1000, 1000, 1000, 2000, 2000, 2000,
+    ]);
+  });
 });
