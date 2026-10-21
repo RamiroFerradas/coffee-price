@@ -1,5 +1,6 @@
 import { defaultLocale, type Locale } from "@/i18n/config";
 import type { Product } from "@/lib/types";
+import { parseGrams } from "@/lib/normalize";
 
 const ARS_FORMATTER = new Intl.NumberFormat("es-AR", {
   style: "currency",
@@ -53,6 +54,16 @@ export function formatGrams(grams: number): string {
   if (grams < 1000) return `${grams} g`;
   if (grams % 1000 === 0) return `${grams / 1000} kg`;
   return `${(grams / 1000).toLocaleString("es-AR")} kg`;
+}
+
+/**
+ * Shops sell one product at several weights (dropdown variations), so their
+ * names repeat across cards without stating the size ("Santos" for 250/500/1kg).
+ * Append the weight to the title unless the name already contains one.
+ */
+export function formatProductTitle(name: string, grams: number | null): string {
+  if (grams === null || parseGrams(name) !== null) return name;
+  return `${name} · ${formatGrams(grams)}`;
 }
 
 export interface PriceBlock {

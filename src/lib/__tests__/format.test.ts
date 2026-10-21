@@ -7,6 +7,7 @@ import {
   formatArs,
   formatGrams,
   formatPriceBlock,
+  formatProductTitle,
   formatRelativeTime,
   sortGramValues,
 } from "../format";
@@ -47,6 +48,26 @@ describe("formatArs", () => {
     expect(formatArs(111200)).toBe("$111.200");
     expect(formatArs(0)).toBe("$0");
     expect(formatArs(1000000)).toBe("$1.000.000");
+  });
+});
+
+describe("formatProductTitle", () => {
+  it("appends the weight when the name does not state a size", () => {
+    expect(formatProductTitle("Santos", 1000)).toBe("Santos · 1 kg");
+    expect(formatProductTitle("Santos", 500)).toBe("Santos · 500 g");
+    expect(formatProductTitle("Drip Bag Colombia Tolima", 165)).toBe(
+      "Drip Bag Colombia Tolima · 165 g",
+    );
+  });
+
+  it("keeps the name unchanged when it already states the size", () => {
+    expect(formatProductTitle("Brasil Bourbon- 500 GRS.", 500)).toBe("Brasil Bourbon- 500 GRS.");
+    expect(formatProductTitle("Bolivia – 1 KG", 1000)).toBe("Bolivia – 1 KG");
+    expect(formatProductTitle("Maragogype - 1 Kilo", 1000)).toBe("Maragogype - 1 Kilo");
+  });
+
+  it("keeps the name unchanged when grams are unknown", () => {
+    expect(formatProductTitle("Santos", null)).toBe("Santos");
   });
 });
 

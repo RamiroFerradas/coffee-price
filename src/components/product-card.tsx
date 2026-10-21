@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatPriceBlock } from "@/lib/format";
+import { formatPriceBlock, formatProductTitle } from "@/lib/format";
 import type { Product } from "@/lib/types";
 import { STORES } from "@/scrapers/stores";
 import { defaultLocale, type Locale } from "@/i18n/config";
@@ -70,6 +70,7 @@ export function ProductCard({
       value !== null && all.indexOf(value) === index,
   );
   const notesText = product.tasting_notes ? notesLine(product.tasting_notes) : null;
+  const displayName = formatProductTitle(product.name, product.grams);
 
   const store = STORES.find((entry) => entry.id === product.store);
   const shippingText =
@@ -95,7 +96,7 @@ export function ProductCard({
         {product.image_url ? (
           <img
             src={product.image_url}
-            alt={product.name}
+            alt={displayName}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 ease-out group-hover:scale-105"
           />
@@ -109,7 +110,7 @@ export function ProductCard({
           {product.roaster}
         </span>
 
-        <h3 className="font-display text-lg leading-snug text-foreground">{product.name}</h3>
+        <h3 className="font-display text-lg leading-snug text-foreground">{displayName}</h3>
 
         <div className="flex flex-wrap gap-1.5">
           {chips.map((chip) => (
