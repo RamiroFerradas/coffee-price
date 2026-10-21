@@ -46,6 +46,12 @@ export async function runScrape(opts: RunScrapeOptions): Promise<ScrapeRunResult
     const lastSynced = await getLastSynced(opts.db);
     const dueIds = new Set(dueStores(now, lastSynced).map((store) => store.id));
     targets = STORES.map((store) => ({ store: store.id, due: dueIds.has(store.id) }));
+    // The time budget is spent in list order, so a store appended at the end
+    // (e.g. a newly added roaster) would stay budget-skipped forever. Never
+    // synced stores must sync at least once, so they go first.
+    targets.sort(
+      (a, b) => Number(!lastSynced[a.store]) - Number(!lastSynced[b.store]),
+    );
   }
 
   const reports: ScrapeReport[] = [];

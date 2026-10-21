@@ -164,6 +164,32 @@ describe("runScrape", () => {
     expect(onSynced).not.toHaveBeenCalled();
   });
 
+  it("scrapes never-synced stores before the due ones, budget or not", async () => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(NOW);
+
+    // Everything except chiquitito synced recently; chiquitito never touched.
+    const fake = createFakeDb({
+      selectData: STORES.filter((s) => s.id !== "chiquitito").map((s) => ({
+        store: s.id,
+        fetched_at: FRESH,
+      })),
+    });
+    const scrape = vi.fn(async (id: StoreId) => {
+      // Burn the whole budget on the first store; the rest get skipped.
+      vi.setSystemTime(NOW.getTime() + 300_000);
+      return [rawProduct("p1", id)];
+    });
+
+    const result = await runScrape({ now: NOW, db: fake.db, scrape });
+
+    // chiquitito sits late in STORES order but syncs first because it has
+    // no lastSynced entry yet.
+    expect(scrape).toHaveBeenCalledTimes(1);
+    expect(scrape).toHaveBeenCalledWith("chiquitito");
+    expect(result.syncRan).toBe(true);
+  });
+
   it("stops launching stores once the time budget is exhausted", async () => {
     vi.useFakeTimers({ toFake: ["Date"] });
     vi.setSystemTime(NOW);
