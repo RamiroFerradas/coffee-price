@@ -50,3 +50,4 @@ dev-smoke.log
 # generated audit/test artifacts
 /scripts/out/
 /.vitest/
+.playwright-mcp/
