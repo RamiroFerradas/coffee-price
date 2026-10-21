@@ -55,24 +55,18 @@ export function formatGrams(grams: number): string {
   return `${(grams / 1000).toLocaleString("es-AR")} kg`;
 }
 
-export interface PriceBlockLabels {
-  perKgRef: string;
-  totalLabel: string;
-}
-
 export interface PriceBlock {
+  price: string;
   perKg: string;
-  reference: string;
 }
 
 export function formatPriceBlock(
   product: Pick<Product, "grams" | "price" | "price_per_kg">,
-  labels: PriceBlockLabels,
 ): PriceBlock | null {
   if (product.grams === null || product.price_per_kg === null) return null;
   return {
+    price: formatArs(product.price),
     perKg: formatArs(product.price_per_kg),
-    reference: `${labels.perKgRef} · ${labels.totalLabel} ${formatArs(product.price)}`,
   };
 }
 

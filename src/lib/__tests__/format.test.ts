@@ -1,6 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { en } from "@/i18n/dictionaries/en";
-import { es } from "@/i18n/dictionaries/es";
 import type { Product } from "@/lib/types";
 import {
   JUST_NOW_LABEL,
@@ -73,60 +71,55 @@ describe("formatGrams", () => {
 });
 
 describe("formatPriceBlock", () => {
-  it("shows the per-kilo price as the primary figure with a 1 kg reference", () => {
+  it("returns the product price and per-kilo price separately", () => {
     expect(
       formatPriceBlock(
         product({ grams: 2800, price: 106600, price_per_kg: 38071 }),
-        es.productCard,
       ),
     ).toEqual({
+      price: "$106.600",
       perKg: "$38.071",
-      reference: "por 1 kg · total $106.600",
     });
   });
 
-  it("uses the English labels for the reference line", () => {
+  it("handles 1 kg products with the same value for both figures", () => {
     expect(
       formatPriceBlock(
         product({ grams: 1000, price: 73500, price_per_kg: 73500 }),
-        en.productCard,
       ),
     ).toEqual({
+      price: "$73.500",
       perKg: "$73.500",
-      reference: "per 1 kg · total $73.500",
     });
   });
 
   it("returns null when the weight is unknown", () => {
     expect(
-      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: null }), es.productCard),
+      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: null })),
     ).toBeNull();
     expect(
-      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: 38071 }), es.productCard),
+      formatPriceBlock(product({ grams: null, price: 106600, price_per_kg: 38071 })),
     ).toBeNull();
   });
 
   it("returns null when the per-kilo price is unknown", () => {
     expect(
-      formatPriceBlock(product({ grams: 2800, price: 106600, price_per_kg: null }), en.productCard),
+      formatPriceBlock(product({ grams: 2800, price: 106600, price_per_kg: null })),
     ).toBeNull();
   });
 
   it("keeps zero totals and formats negatives with a leading sign", () => {
-    expect(formatPriceBlock(product({ grams: 1000, price: 0, price_per_kg: 0 }), es.productCard)).toEqual(
-      {
-        perKg: "$0",
-        reference: "por 1 kg · total $0",
-      },
-    );
+    expect(formatPriceBlock(product({ grams: 1000, price: 0, price_per_kg: 0 }))).toEqual({
+      price: "$0",
+      perKg: "$0",
+    });
     expect(
       formatPriceBlock(
         product({ grams: 2800, price: -106600, price_per_kg: -38071 }),
-        es.productCard,
       ),
     ).toEqual({
+      price: "-$106.600",
       perKg: "-$38.071",
-      reference: "por 1 kg · total -$106.600",
     });
   });
 });

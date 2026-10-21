@@ -81,7 +81,7 @@ export function ProductCard({
     (value, index, all): value is string =>
       value !== null && all.indexOf(value) === index,
   );
-  const priceBlock = formatPriceBlock(product, labels);
+  const priceBlock = formatPriceBlock(product);
 
   return (
     <a
@@ -137,10 +137,10 @@ export function ProductCard({
         {priceBlock !== null ? (
           <div className="mt-auto flex flex-col gap-0.5 border-t border-line pt-3">
             <span className="font-mono text-3xl font-semibold tabular-nums leading-none text-accent">
-              {priceBlock.perKg}
+              {priceBlock.price}
             </span>
             <span className="font-mono text-xs tabular-nums text-muted">
-              {priceBlock.reference}
+              {`${priceBlock.perKg} ${labels.perKgRef}`}
             </span>
           </div>
         ) : null}

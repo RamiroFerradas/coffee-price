@@ -78,7 +78,6 @@ export interface Dictionary {
     freeShipping: string;
     viewOnStore: string;
     perKgRef: string;
-    totalLabel: string;
   };
   updatedBadge: {
     justUpdated: string;
