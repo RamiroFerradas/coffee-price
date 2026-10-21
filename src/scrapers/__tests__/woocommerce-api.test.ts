@@ -332,4 +332,56 @@ describe("scrapeWooApi", () => {
       installments: null,
     });
   });
+
+  it("decodes HTML entities left in product names", async () => {
+    const base = list().find((p) => p.id === 38287) as Record<string, unknown>;
+    const fetchFn = makeFetch({
+      [LIST_URL]: [
+        {
+          ...base,
+          id: 9801,
+          sku: "ENT-1",
+          name: "Bolivia &#8211; 1 KG",
+          attributes: [],
+          variations: [],
+          weight: "1",
+        },
+        {
+          ...base,
+          id: 9802,
+          sku: "ENT-2",
+          name: "REFIL &#8211; BLEND COLOMBIA &#038; BRASIL &#8211; 250 GRS",
+          attributes: [],
+          variations: [],
+          weight: "0.25",
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(config(), { fetchFn });
+
+    expect(rowsByName(rows, "Bolivia – 1 KG")).toHaveLength(1);
+    expect(rowsByName(rows, "REFIL – BLEND COLOMBIA & BRASIL – 250 GRS")).toHaveLength(1);
+  });
+
+  it("applies the store grams override when the API weight is a shipping weight", async () => {
+    const cofijaus = getStore("cofijaus") as WooApiStore;
+    const dripBag = {
+      id: 3728,
+      name: "Drip Bag Colombia Tolima",
+      slug: "drip-bag-colombia-tolima",
+      sku: "DRIP7",
+      permalink: "https://cofijaus.com.ar/producto/drip-bag-colombia-tolima/",
+      prices: { price: "2700000", currency_minor_unit: 2 },
+      attributes: [],
+      variations: [],
+      weight: "0.5",
+      is_in_stock: true,
+    };
+    const fetchFn = makeFetch({ [cofijaus.source]: [dripBag] });
+    const rows = await scrapeWooApi(cofijaus, { fetchFn });
+
+    expect(rows).toHaveLength(1);
+    // 10 sobres de 16,5 g: the API "0.5" is the box weight, not the coffee.
+    expect(rows[0]).toMatchObject({ external_id: "DRIP7", grams: 165, price: 27000 });
+  });
 });

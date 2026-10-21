@@ -1,4 +1,4 @@
-import { parseArsPrice, parseGrams } from "@/lib/normalize";
+import { decodeHtmlEntities, parseArsPrice, parseGrams } from "@/lib/normalize";
 import type { RawProduct } from "@/lib/types";
 import { fetchText, type FetchFn } from "./http";
 import type { WooApiStore } from "./stores";
@@ -56,7 +56,7 @@ function buildRow(
   return {
     store: config.id,
     external_id: fields.external_id,
-    name: product.name ?? "",
+    name: decodeHtmlEntities(product.name ?? ""),
     url: fields.url,
     roaster: config.roaster,
     price: fields.price,
@@ -152,8 +152,11 @@ export function parentRow(config: WooApiStore, product: WooProduct, peso?: WooAt
   if (price == null || price <= 0) return null;
 
   // Some shops (e.g. Cofi Jaus) encode grammage in the product name instead of a
-  // weight attribute; the API weight is the last resort.
+  // weight attribute; the API weight is the last resort. A store-level override
+  // wins over all of them for products whose API weight is a shipping weight.
+  const override = config.gramsOverrides?.[baseExternalId(product)];
   const grams =
+    override ??
     gramsFromAttribute(peso) ??
     parseGrams(product.name ?? "") ??
     gramsFromWooWeight(product.weight);

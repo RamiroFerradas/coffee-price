@@ -13,6 +13,9 @@ export interface StoreBase {
 export interface WooApiStore extends StoreBase {
   platform: "woocommerce-api";
   source: string;
+  // Some products ship a packaging weight in the API that is not the coffee
+  // weight; map their external id (sku/slug) to the real grammage.
+  gramsOverrides?: Readonly<Record<string, number>>;
 }
 
 export type WooHtmlDiscovery =
@@ -56,6 +59,13 @@ const CAFE_DELIRANTE_EXCLUDES = [
 
 const COFIJAUS_EXCLUDES = ["Cursos", "Pasteleria", "Box", "Té"] as const;
 
+// The Drip Bag is a box of 10 x 16.5 g sachets (165 g of coffee), but the API
+// reports the box's shipping weight (0.5 kg), which would sort it as the
+// cheapest per-kg coffee on the site.
+const COFIJAUS_GRAMS_OVERRIDES: Readonly<Record<string, number>> = {
+  DRIP7: 165,
+};
+
 export const STORES: readonly StoreConfig[] = [
   {
     id: "cafedelirante",
@@ -74,6 +84,7 @@ export const STORES: readonly StoreConfig[] = [
     source: "https://cofijaus.com.ar/wp-json/wc/store/v1/products?per_page=100",
     refreshMinutes: 60,
     excludeCategories: COFIJAUS_EXCLUDES,
+    gramsOverrides: COFIJAUS_GRAMS_OVERRIDES,
   },
   {
     id: "flatnwhite",

@@ -117,3 +117,39 @@ export function pricePerKg(price: number, grams: number | null): number | null {
   if (price <= 0) return null;
   return Math.round((price * 1000) / grams);
 }
+
+const NAMED_ENTITIES: Readonly<Record<string, string>> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: " ",
+};
+
+/**
+ * Decode HTML entities that shops leave raw in product names (e.g.
+ * "Bolivia &#8211; 1 KG"). Handles numeric (decimal and hex) and a small
+ * set of named entities; unknown entities are left untouched.
+ */
+export function decodeHtmlEntities(text: string): string {
+  if (!text) return text;
+  return text.replace(
+    /&(?:#x([0-9a-fA-F]+)|#(\d+)|([a-zA-Z]+));/g,
+    (match, hex: string | undefined, dec: string | undefined, name: string | undefined) => {
+      if (hex !== undefined) {
+        const code = Number.parseInt(hex, 16);
+        return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+      }
+      if (dec !== undefined) {
+        const code = Number.parseInt(dec, 10);
+        return Number.isFinite(code) ? String.fromCodePoint(code) : match;
+      }
+      if (name !== undefined) {
+        const key = name.toLowerCase();
+        if (key in NAMED_ENTITIES) return NAMED_ENTITIES[key];
+      }
+      return match;
+    },
+  );
+}
