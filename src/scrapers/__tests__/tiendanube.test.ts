@@ -10,6 +10,7 @@ const MODO = getStore("modobarista") as TiendanubeStore;
 const KAPS = getStore("kapselmaker") as TiendanubeStore;
 const JJ = getStore("johnandjoe") as TiendanubeStore;
 const FUEGO = getStore("fuegotostadores") as TiendanubeStore;
+const PB = getStore("puertoblest") as TiendanubeStore;
 
 const noDelay = () => Promise.resolve();
 
@@ -899,6 +900,91 @@ describe("scrapeTiendanube shipping and installments", () => {
     );
 
     expect(rows[0]).toMatchObject({ installments: null, free_shipping: null });
+  });
+});
+
+describe("scrapeTiendanube puertoblest", () => {
+  const ldProduct = (
+    slug: string,
+    name: string,
+    weight: string | null,
+    price: string,
+    sku: string | null,
+  ): string =>
+    `<script type="application/ld+json">${JSON.stringify({
+      "@type": "Product",
+      name,
+      mainEntityOfPage: { "@id": `https://www.cafepuertoblest.com/productos/${slug}/` },
+      ...(sku ? { sku } : {}),
+      ...(weight
+        ? { weight: { "@type": "QuantitativeValue", unitCode: "KGM", value: weight } }
+        : {}),
+      offers: {
+        "@type": "Offer",
+        priceCurrency: "ARS",
+        price,
+        availability: "https://schema.org/InStock",
+      },
+    })}</script>`;
+
+  const listing = [
+    ldProduct("kenia-sl28-lavado", "Café Kenia SL28 Lavado", "0.25", "32000", "K42"),
+    ldProduct("altura-1-house-blend", "Café Altura 1 House Blend", "0.25", "24000", "B1C"),
+    ldProduct(
+      "suscripcion-blest-club-seleccion-origen-750-gr",
+      "Suscripción Blest Club - Selección Origen 750 gr.",
+      "0.75",
+      "98890",
+      "SUS",
+    ),
+    ldProduct("giftcard-cafe-especial", "GIFT CARDS", null, "50000", null),
+    ldProduct(
+      "perfeccionamiento-gastronomico-cafe-filtrado",
+      "Perfeccionamiento Gastronómico - Café Filtrado",
+      null,
+      "50000",
+      null,
+    ),
+    ldProduct(
+      "barista-skills-nivel-intermedio-certificacion-oficial-sca",
+      "Barista Skills: Nivel Intermedio – Certificación Oficial SCA",
+      null,
+      "880000",
+      null,
+    ),
+  ].join("");
+
+  const routes = () => ({
+    [PB.source]: listing,
+    [`${PB.source}?page=2`]: "<html><body>no products</body></html>",
+  });
+
+  it("drops the subscriptions, gift card and courses from the shared catalog", async () => {
+    const fetchFn = vi.fn(makeFetch(routes()));
+    const rows = await scrapeTiendanube(PB, { fetchFn, delayFn: noDelay });
+
+    expect(fetchFn.mock.calls.map((call) => call[0])).toEqual([
+      PB.source,
+      `${PB.source}?page=2`,
+    ]);
+    expect(rows.map((row) => row.external_id)).toEqual(["K42", "B1C"]);
+  });
+
+  it("takes grams from the real 0.25 kg bag weight the names never state", async () => {
+    const fetchFn = makeFetch(routes());
+    const rows = await scrapeTiendanube(PB, { fetchFn, delayFn: noDelay });
+
+    expect(rows).toHaveLength(2);
+    expect(rows[0]).toMatchObject({
+      store: "puertoblest",
+      roaster: "Puerto Blest",
+      name: "Café Kenia SL28 Lavado",
+      url: "https://www.cafepuertoblest.com/productos/kenia-sl28-lavado/",
+      price: 32000,
+      grams: 250,
+      in_stock: true,
+    });
+    expect(rows.every((row) => row.price > 0)).toBe(true);
   });
 });
 

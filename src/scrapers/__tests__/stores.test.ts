@@ -18,6 +18,7 @@ describe("STORES registry", () => {
       "kapselmaker",
       "modobarista",
       "momotostadores",
+      "puertoblest",
       "republicadelcafe",
     ] satisfies StoreId[]);
   });
@@ -115,6 +116,34 @@ describe("STORES registry", () => {
       pagination: { kind: "query", param: "page" },
       refreshMinutes: 60,
     });
+    expect(getStore("puertoblest")).toMatchObject({
+      platform: "tiendanube",
+      roaster: "Puerto Blest",
+      baseUrl: "https://www.cafepuertoblest.com",
+      source: "https://www.cafepuertoblest.com/productos/",
+      pagination: { kind: "query", param: "page" },
+      refreshMinutes: 60,
+    });
+  });
+
+  it("scopes puertoblest to the coffees of the shared catalog", () => {
+    // /productos/ is the only catalog (no coffee-only category): Blest Club
+    // subscriptions, the gift card and the courses sit next to the coffees.
+    const pb = getStore("puertoblest") as TiendanubeStore;
+    const excluded = [
+      "suscripcion-blest-club-seleccion-origen-750-gr",
+      "suscripcion-blest-club-seleccion-origen-500gr",
+      "giftcard-cafe-especial",
+      "perfeccionamiento-gastronomico-cafe-filtrado",
+      "brewing-filtrados-nivel-intermedio-certificacion-oficial-sca-vhifw",
+      "barista-skills-nivel-intermedio-certificacion-oficial-sca",
+    ];
+    for (const slug of excluded) {
+      expect(pb.excludeSlugs?.some((pattern) => pattern.test(slug))).toBe(true);
+    }
+    for (const slug of ["kenia-sl28-lavado", "altura-1-house-blend", "cafe-bouquet"]) {
+      expect(pb.excludeSlugs?.some((pattern) => pattern.test(slug))).toBe(false);
+    }
   });
 
   it("scopes modobarista to the specialty category and kapselmaker to the full listing", () => {

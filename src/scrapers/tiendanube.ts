@@ -1,6 +1,6 @@
 import type { RawProduct } from "@/lib/types";
 import { fetchText } from "./http";
-import { absoluteUrl, collectProducts, dedupeByExternalId, extractLdJsonBlocks, productUrl } from "./ldjson";
+import { absoluteUrl, collectProducts, dedupeByExternalId, extractLdJsonBlocks, productUrl, slugFromUrl } from "./ldjson";
 import type { TiendanubeStore } from "./stores";
 import {
   MAX_PAGES,
@@ -37,6 +37,8 @@ export async function scrapeTiendanube(
     for (const product of products) {
       const url = absoluteUrl(productUrl(product), config.baseUrl);
       if (!url) continue;
+      const slug = slugFromUrl(url);
+      if (config.excludeSlugs?.some((pattern) => pattern.test(slug))) continue;
       const base = toRow(config, product, listing, url);
       if (!base) continue;
       const productVariants = variants.get(url);

@@ -37,6 +37,9 @@ export interface TiendanubeStore extends StoreBase {
   source: string;
   pagination: TiendanubePagination;
   gramsFromSku?: RegExp;
+  // Tiendanube stores without a coffee-only category list subscriptions, gift
+  // cards or courses inside the same catalog; match their url slugs to drop them.
+  excludeSlugs?: readonly RegExp[];
 }
 
 export interface MercadoLibreStore extends StoreBase {
@@ -189,6 +192,25 @@ export const STORES: readonly StoreConfig[] = [
     source: "https://www.republicadelcafe.com.ar/cafe-tostado-natural/",
     pagination: { kind: "query", param: "page" },
     refreshMinutes: 60,
+  },
+  {
+    id: "puertoblest",
+    platform: "tiendanube",
+    roaster: "Puerto Blest",
+    baseUrl: "https://www.cafepuertoblest.com",
+    source: "https://www.cafepuertoblest.com/productos/",
+    pagination: { kind: "query", param: "page" },
+    refreshMinutes: 60,
+    // /productos/ is the only catalog (there is no coffee-only category):
+    // Blest Club subscriptions, the gift card and the courses sit next to the
+    // 18 coffees.
+    excludeSlugs: [
+      /^suscripcion-/,
+      /^giftcard-/,
+      /^perfeccionamiento-/,
+      /^brewing-/,
+      /^barista-skills-/,
+    ],
   },
   {
     id: "indiosverdes",

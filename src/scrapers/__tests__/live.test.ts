@@ -20,6 +20,7 @@ const STORE_IDS: StoreId[] = [
   "republicadelcafe",
   "cofijaus",
   "chiquitito",
+  "puertoblest",
 ];
 
 const MIN_ROWS: Partial<Record<StoreId, number>> = {
@@ -30,6 +31,7 @@ const MIN_ROWS: Partial<Record<StoreId, number>> = {
   kapselmaker: 100,
   indiosverdes: 50,
   drupa: 15,
+  puertoblest: 15,
 };
 
 describe.skipIf(!live)("live scrapers", () => {
