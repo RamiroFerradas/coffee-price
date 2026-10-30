@@ -84,6 +84,30 @@ describe("parseMlCards", () => {
       </div>`;
     expect(parseMlCards(html, ivStore())[0].in_stock).toBe(false);
   });
+
+  it("reads prices from the style attribute markup MercadoLibre ships now", () => {
+    // Live markup (2026-10): poly-price__current carries a style attribute and the
+    // amount span sits behind role/id attributes, so the exact-tag lookup missed it
+    // and every card of the store pages was dropped for a null price.
+    const html = `
+      <div class="andes-card poly-card poly-card--grid-card">
+        <div class="poly-card__content">
+          <a href="https://www.mercadolibre.com.ar/cafe-brasil/p/MLA27764820?wid=MLA4019691812&amp;tracking_id=abc" target="_self" class="poly-component__title">Café En Grano Brasil X 1kg</a>
+          <div class="poly-component__price">
+            <div class="poly-price__current" style="--current-price-symbol-size:14px">
+              <span class="andes-money-amount poly-price__amount andes-money-amount--cents-superscript" style="font-size:18px" role="img" id="_R_2b5r1_" aria-label="39900 pesos argentinos" aria-roledescription="Monto" data-andes-money-amount="true">
+                <span class="andes-money-amount__fraction" aria-hidden="true">39.900</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+    expect(parseMlCards(html, drupaStore())[0]).toMatchObject({
+      external_id: "MLA4019691812",
+      price: 39900,
+      url: "https://www.mercadolibre.com.ar/cafe-brasil/p/MLA27764820",
+    });
+  });
 });
 
 describe("extractMlFacetLinks", () => {

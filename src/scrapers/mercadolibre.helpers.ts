@@ -37,12 +37,15 @@ function cardExternalId(segment: string): string | null {
 }
 
 function parseMlPrice(segment: string): number | null {
-  const start = segment.indexOf('<div class="poly-price__current">');
-  if (start < 0) return null;
-  const close = segment.indexOf("</div>", start);
-  const block = segment.slice(start, close < 0 ? segment.length : close);
-  const current = /aria-label="(?:Ahora:\s*)?(\d[\d.]*)\s*pesos argentinos"/.exec(block);
-  if (current) return parseArsPrice(current[1]);
+  // The open tag may carry extra attributes (MercadoLibre ships a style attr on
+  // poly-price__current now), so match the class prefix instead of the full tag.
+  const start = segment.indexOf('<div class="poly-price__current"');
+  if (start >= 0) {
+    const close = segment.indexOf("</div>", start);
+    const block = segment.slice(start, close < 0 ? segment.length : close);
+    const current = /aria-label="(?:Ahora:\s*)?(\d[\d.]*)\s*pesos argentinos"/.exec(block);
+    if (current) return parseArsPrice(current[1]);
+  }
   const amount = /class="[^"]*poly-price__amount[^"]*"[^>]*aria-label="(?:Ahora:\s*)?(\d[\d.]*)\s*pesos argentinos"/.exec(
     segment,
   );

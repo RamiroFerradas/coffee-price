@@ -29,7 +29,11 @@ const MIN_ROWS: Partial<Record<StoreId, number>> = {
   cofijaus: 20,
   johnandjoe: 40,
   kapselmaker: 100,
-  indiosverdes: 50,
+  // indiosverdes: the listado root is IP-walled (gz/account-verification) for
+  // datacenter clients, so only the www store page fallback is reachable from
+  // here (21 coffees in the recommended tab). Prod may collect more if the
+  // root is not walled from Vercel.
+  indiosverdes: 15,
   drupa: 15,
   puertoblest: 15,
 };
