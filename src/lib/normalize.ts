@@ -28,10 +28,7 @@ const WORD_NUMBERS: Readonly<Record<string, number>> = {
   diez: 10,
 };
 
-function parseUnitGrams(text: string): number | null {
-  const match = GRAMS_PATTERN.exec(text);
-  if (!match) return null;
-
+function unitGramsOf(match: RegExpExecArray): number {
   const rawNumber = match[1];
   const isGrouped = /^\d{1,3}(?:[.,]\d{3})+$/.test(rawNumber);
   const value = isGrouped
@@ -41,6 +38,23 @@ function parseUnitGrams(text: string): number | null {
   const unit = match[2].toLowerCase();
   const multiplier = unit.startsWith("k") ? 1000 : 1;
   return Math.round(value * multiplier);
+}
+
+// Combo names publish every bag in one string ("Combo 2 - House Blend 1Kg -
+// Sierra Nevada 250Gr - Red Bourbon 250Gr"), so the total grammage is the sum
+// of all weight tokens; keeping only the first divided the price by a single
+// bag and inflated price_per_kg on every combo.
+function parseUnitGrams(text: string): number | null {
+  const pattern = new RegExp(GRAMS_PATTERN.source, "gi");
+  let total = 0;
+  let count = 0;
+  let match = pattern.exec(text);
+  while (match !== null) {
+    total += unitGramsOf(match);
+    count += 1;
+    match = pattern.exec(text);
+  }
+  return count > 0 ? total : null;
 }
 
 function wordCount(token: string): number {

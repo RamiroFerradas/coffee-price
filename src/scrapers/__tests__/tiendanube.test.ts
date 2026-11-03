@@ -644,6 +644,24 @@ describe("scrapeTiendanube grams precedence (name first)", () => {
     expect(rows[0].grams).toBe(125);
   });
 
+  it("sums every bag weight for combo names", async () => {
+    // Reported bug: indigoroasters' Combo 2 (1 kg + 250 g + 250 g = 1.5 kg) was
+    // divided by the first bag only (1000 g), so price_per_kg came out 50% too
+    // high. The LD weight here is Tiendanube's placeholder: only the name can
+    // supply the total.
+    const rows = await scrape(
+      INDIGO,
+      productHtml(INDIGO, {
+        name: "Combo 2 - House Blend 1Kg - Sierra Nevada 250Gr - Red Bourbon 250Gr",
+        sku: "CCKG",
+        weight: "0.001",
+      }),
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].grams).toBe(1500);
+  });
+
   it("falls back to the ld weight when the name carries no grammage", async () => {
     const rows = await scrape(
       FUEGO,

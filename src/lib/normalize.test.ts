@@ -46,8 +46,19 @@ describe("parseGrams", () => {
     expect(parseGrams("250 GR")).toBe(250);
   });
 
-  it("uses the first unit-bearing match", () => {
-    expect(parseGrams("Colombia 250g y Brasil 1kg")).toBe(250);
+  // Combo names publish every bag in one string, so all unit-bearing matches
+  // add up: taking only the first divided the price by a single bag and
+  // inflated price_per_kg (reported on indigoroasters' Combo 2, whose
+  // 1 kg + 250 g + 250 g = 1.5 kg published as 1000 g).
+  it("sums every unit-bearing match for combo names", () => {
+    expect(parseGrams("Colombia 250g y Brasil 1kg")).toBe(1250);
+    expect(parseGrams("Combo 2 - House Blend 1Kg - Sierra Nevada 250Gr - Red Bourbon 250Gr")).toBe(
+      1500,
+    );
+    expect(parseGrams("Combo 1 - Tolima 250 gr - Blend de temporada 250 gr - Sierra Nevada 250 gr")).toBe(
+      750,
+    );
+    expect(parseGrams("Bourbon Rojo + Tico (1kg + 120gr)")).toBe(1120);
   });
 
   it("treats '2.500 gr' as 2500 grams", () => {
