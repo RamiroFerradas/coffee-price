@@ -84,6 +84,17 @@ export async function fetchVariation(
   }
 }
 
+// Shops name the weight attribute differently ("Elegí el Peso", "Tamaño"),
+// and the variation refs echo that exact name; compare normalized names
+// instead of hardcoding a "peso" match, which missed "Tamaño" stores.
+function attributeName(name?: string): string {
+  return (name ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+}
+
 export async function expandWeights(
   config: WooApiStore,
   product: WooProduct,
@@ -95,12 +106,16 @@ export async function expandWeights(
   const refs = product.variations ?? [];
   if (terms.length === 0 || refs.length === 0) return null;
 
+  const weightName = attributeName(peso.name);
+  const isWeightAttribute = (name?: string): boolean =>
+    /peso/i.test(name ?? "") || (weightName !== "" && attributeName(name) === weightName);
+
   const rows: RawProduct[] = [];
   for (const term of terms) {
     const ref = refs.find((candidate) =>
       (candidate.attributes ?? []).some(
         (attribute) =>
-          /peso/i.test(attribute.name ?? "") && attribute.value === term.slug,
+          isWeightAttribute(attribute.name) && attribute.value === term.slug,
       ),
     );
     if (ref?.id == null) continue;

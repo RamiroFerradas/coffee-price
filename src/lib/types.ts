@@ -13,7 +13,9 @@ export type StoreId =
   | "republicadelcafe"
   | "cofijaus"
   | "chiquitito"
-  | "puertoblest";
+  | "puertoblest"
+  | "ruffocoffee"
+  | "brunobrown";
 
 export interface Product {
   id: string;

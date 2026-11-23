@@ -481,4 +481,104 @@ describe("scrapeWooApi", () => {
     // Falls through to the name, which states 1 KG.
     expect(rows[0]).toMatchObject({ external_id: "colombia-tolima-1kg", grams: 1000 });
   });
+
+  it("expands a variable product whose weight attribute is named Tamaño", async () => {
+    // Ruffo Coffee names the weight attribute "Tamaño" and only ships 100, 250
+    // and 500 g variants (the "1 kg" term has no variation).
+    const ruffo = getStore("ruffocoffee") as WooApiStore;
+    const slug = "cafe-colombia-tres-dragones-tostador-ruffo-coffee";
+    const product = {
+      id: 34203,
+      name: "Café Colombia Tres Dragones &#8211; Tostador Ruffo Coffee",
+      slug,
+      type: "variable",
+      permalink: `https://ruffocoffee.com/producto/${slug}/`,
+      prices: { price: "20555", currency_minor_unit: 0 },
+      images: [{ src: "https://ruffocoffee.com/img/bolsa.png" }],
+      attributes: [
+        { name: "Origen", terms: [{ name: "Colombia", slug: "colombia" }] },
+        {
+          name: "Tamaño",
+          terms: [
+            { name: "1 kg", slug: "1-kg" },
+            { name: "100 gr", slug: "100-gr" },
+            { name: "250 gr", slug: "250-gr" },
+            { name: "500 gr", slug: "500-gr" },
+          ],
+        },
+        {
+          name: "Presentación",
+          terms: [
+            { name: "En Granos", slug: "En Granos" },
+            { name: "Molido", slug: "Molido" },
+          ],
+        },
+      ],
+      variations: [
+        { id: 34686, attributes: [{ name: "Tamaño", value: "500-gr" }, { name: "Presentación", value: "En Granos" }] },
+        { id: 34688, attributes: [{ name: "Tamaño", value: "250-gr" }, { name: "Presentación", value: "En Granos" }] },
+        { id: 34690, attributes: [{ name: "Tamaño", value: "100-gr" }, { name: "Presentación", value: "En Granos" }] },
+      ],
+      is_in_stock: true,
+    };
+    const variation = (id: number, price: string) => ({
+      id,
+      prices: { price, currency_minor_unit: 0 },
+      permalink: `https://ruffocoffee.com/producto/${slug}/?attribute_tamano=${id}`,
+      is_in_stock: true,
+    });
+    const fetchFn = makeFetch({
+      [ruffo.source]: [product],
+      "https://ruffocoffee.com/wp-json/wc/store/v1/products/34686": variation(34686, "74000"),
+      "https://ruffocoffee.com/wp-json/wc/store/v1/products/34688": variation(34688, "41111"),
+      "https://ruffocoffee.com/wp-json/wc/store/v1/products/34690": variation(34690, "20555"),
+    });
+    const rows = await scrapeWooApi(ruffo, { fetchFn });
+
+    const summary = rows
+      .map(({ external_id, grams, price }) => ({ external_id, grams, price }))
+      .sort((a, b) => (b.grams ?? 0) - (a.grams ?? 0));
+    expect(summary).toEqual([
+      { external_id: `${slug}-500`, grams: 500, price: 74000 },
+      { external_id: `${slug}-250`, grams: 250, price: 41111 },
+      { external_id: `${slug}-100`, grams: 100, price: 20555 },
+    ]);
+    const biggest = rows.find((row) => row.grams === 500);
+    expect(biggest?.url).toBe(`https://ruffocoffee.com/producto/${slug}/?attribute_tamano=34686`);
+    expect(biggest?.image_url).toBe("https://ruffocoffee.com/img/bolsa.png");
+  });
+
+  it("drops products excluded by slug from the coffee-only listing", async () => {
+    const ruffo = getStore("ruffocoffee") as WooApiStore;
+    const base = {
+      prices: { price: "7778", currency_minor_unit: 0 },
+      attributes: [],
+      variations: [],
+      is_in_stock: true,
+    };
+    const fetchFn = makeFetch({
+      [ruffo.source]: [
+        {
+          ...base,
+          id: 21432,
+          name: "Leche Vegetal de Avena Barista Naveia 1L",
+          slug: "leche-vegetal-de-avena-barista-naveia",
+          permalink: "https://ruffocoffee.com/producto/leche-vegetal-de-avena-barista-naveia/",
+        },
+        {
+          ...base,
+          id: 22403,
+          name: "Café Brasil Catuai Amarillo &#8211; Tostador Ruffo Coffee",
+          slug: "cafe-brasil-catuai-amarillo-tostador-ruffo-coffee",
+          permalink: "https://ruffocoffee.com/producto/cafe-brasil-catuai-amarillo-tostador-ruffo-coffee/",
+          prices: { price: "12222", currency_minor_unit: 0 },
+        },
+      ],
+    });
+    const rows = await scrapeWooApi(ruffo, { fetchFn });
+
+    expect(rows.map((row) => row.external_id)).toEqual([
+      "cafe-brasil-catuai-amarillo-tostador-ruffo-coffee",
+    ]);
+  });
 });

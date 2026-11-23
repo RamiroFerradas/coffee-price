@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import type { StoreId } from "@/lib/types";
-import { STORES, getStore, type TiendanubeStore } from "../stores";
+import { STORES, getStore, type TiendanubeStore, type WooApiStore } from "../stores";
 
 describe("STORES registry", () => {
   it("contains one config per store id", () => {
     expect(STORES.map((s) => s.id).sort()).toEqual([
+      "brunobrown",
       "bunatostadores",
       "cafedelirante",
       "chiquitito",
@@ -20,6 +21,7 @@ describe("STORES registry", () => {
       "momotostadores",
       "puertoblest",
       "republicadelcafe",
+      "ruffocoffee",
     ] satisfies StoreId[]);
   });
 
@@ -53,6 +55,57 @@ describe("STORES registry", () => {
       source: "https://cofijaus.com.ar/wp-json/wc/store/v1/products?per_page=100",
       excludeCategories: expect.arrayContaining(["Té", "Cursos", "Pasteleria", "Box"]),
     });
+  });
+
+  it("configures ruffocoffee as woocommerce-api scoped to the coffee category", () => {
+    const store = getStore("ruffocoffee");
+    expect(store.platform).toBe("woocommerce-api");
+    expect(store).toMatchObject({
+      roaster: "Ruffo Coffee",
+      baseUrl: "https://ruffocoffee.com",
+      refreshMinutes: 60,
+      source: "https://ruffocoffee.com/wp-json/wc/store/v1/products?per_page=100&category=566",
+      shippingPolicy: "Envío gratis desde $150.000",
+      installmentsPolicy: "3 cuotas sin interés",
+    });
+    // The shared "Café de Especialidad" category also lists an oat milk.
+    const ruffo = store as WooApiStore;
+    expect(ruffo.excludeSlugs?.some((pattern) => pattern.test("leche-vegetal-de-avena-barista-naveia"))).toBe(
+      true,
+    );
+    expect(
+      ruffo.excludeSlugs?.some((pattern) =>
+        pattern.test("cafe-colombia-tres-dragones-tostador-ruffo-coffee"),
+      ),
+    ).toBe(false);
+  });
+
+  it("configures brunobrown as tiendanube over the paginated catalog", () => {
+    const store = getStore("brunobrown");
+    expect(store).toMatchObject({
+      platform: "tiendanube",
+      roaster: "Bruno Brown Café",
+      baseUrl: "https://www.brunobrowncafebsas.com.ar",
+      source: "https://www.brunobrowncafebsas.com.ar/productos/",
+      pagination: { kind: "query", param: "page" },
+      refreshMinutes: 60,
+      shippingPolicy: "Envío gratis desde $99.999",
+    });
+    expect(store.installmentsPolicy).toBeUndefined();
+    // The shop publishes combos whose stated weight is neither the bag size nor
+    // the total, so they cannot be priced per kg reliably.
+    const bruno = store as TiendanubeStore;
+    const excluded = [
+      "combo-inicio",
+      "combo-inicio-500gr-brasil-colombia",
+      "combo-inicio-1kg-brasil-colombia",
+    ];
+    for (const slug of excluded) {
+      expect(bruno.excludeSlugs?.some((pattern) => pattern.test(slug))).toBe(true);
+    }
+    for (const slug of ["cafe-brasil-250gr", "cafe-brasil-1kg"]) {
+      expect(bruno.excludeSlugs?.some((pattern) => pattern.test(slug))).toBe(false);
+    }
   });
 
   it("configures flatnwhite as woocommerce-html scoped to the coffee archive", () => {

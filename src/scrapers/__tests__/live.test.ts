@@ -21,6 +21,8 @@ const STORE_IDS: StoreId[] = [
   "cofijaus",
   "chiquitito",
   "puertoblest",
+  "ruffocoffee",
+  "brunobrown",
 ];
 
 const MIN_ROWS: Partial<Record<StoreId, number>> = {
@@ -36,6 +38,10 @@ const MIN_ROWS: Partial<Record<StoreId, number>> = {
   indiosverdes: 15,
   drupa: 15,
   puertoblest: 15,
+  // 6 coffees x 3 real bag sizes (the shop's "1 kg" term has no variation).
+  ruffocoffee: 15,
+  // 57 catalog products minus the 3 combos with unreliable grammage.
+  brunobrown: 45,
 };
 
 describe.skipIf(!live)("live scrapers", () => {

@@ -16,6 +16,9 @@ export interface WooApiStore extends StoreBase {
   // Some products ship a packaging weight in the API that is not the coffee
   // weight; map their external id (sku/slug) to the real grammage.
   gramsOverrides?: Readonly<Record<string, number>>;
+  // Coffee-only Store API categories also list a few non-coffee items (milk,
+  // syrups); match their url slugs to drop them.
+  excludeSlugs?: readonly RegExp[];
 }
 
 export type WooHtmlDiscovery =
@@ -89,6 +92,20 @@ export const STORES: readonly StoreConfig[] = [
     refreshMinutes: 60,
     excludeCategories: COFIJAUS_EXCLUDES,
     gramsOverrides: COFIJAUS_GRAMS_OVERRIDES,
+  },
+  {
+    id: "ruffocoffee",
+    platform: "woocommerce-api",
+    roaster: "Ruffo Coffee",
+    baseUrl: "https://ruffocoffee.com",
+    // The shop publishes 62 Store API products (gear, machines, courses); the
+    // coffee category 566 is the only one this site prices.
+    source: "https://ruffocoffee.com/wp-json/wc/store/v1/products?per_page=100&category=566",
+    refreshMinutes: 60,
+    shippingPolicy: "Envío gratis desde $150.000",
+    installmentsPolicy: "3 cuotas sin interés",
+    // The coffee category also lists an oat milk.
+    excludeSlugs: [/^leche-/],
   },
   {
     id: "flatnwhite",
@@ -211,6 +228,23 @@ export const STORES: readonly StoreConfig[] = [
       /^brewing-/,
       /^barista-skills-/,
     ],
+  },
+  {
+    id: "brunobrown",
+    platform: "tiendanube",
+    roaster: "Bruno Brown Café",
+    baseUrl: "https://www.brunobrowncafebsas.com.ar",
+    // /productos/ is the whole catalog: per-origin coffees in 250 g/500 g/1 kg
+    // plus 3 "Combo Inicio" boxes.
+    source: "https://www.brunobrowncafebsas.com.ar/productos/",
+    pagination: { kind: "query", param: "page" },
+    shippingPolicy: "Envío gratis desde $99.999",
+    refreshMinutes: 60,
+    // The combos state the bag size in the name but their JSON-LD weight is
+    // neither the bag size nor the box total ("Combo Inicio 250gr" = 2 x 250 g
+    // ships as 0.5 kg, while "Combo Inicio 500gr" ships as 0.5 kg too), so they
+    // cannot be priced per kg reliably.
+    excludeSlugs: [/^combo-/],
   },
   {
     id: "indiosverdes",

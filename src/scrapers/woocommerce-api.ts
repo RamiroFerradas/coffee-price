@@ -26,6 +26,7 @@ export async function scrapeWooApi(
   for (const product of products) {
     if (!product || product.is_in_stock === false) continue;
     if (isExcluded(product, config.excludeCategories)) continue;
+    if (config.excludeSlugs?.some((pattern) => pattern.test(product.slug ?? ""))) continue;
 
     const peso = weightAttribute(product);
     const expanded = peso
