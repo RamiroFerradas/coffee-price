@@ -1,28 +1,10 @@
 import { revalidatePath, revalidateTag } from "next/cache";
 import type { NextRequest } from "next/server";
+import { presentedSecret, secretsMatch } from "@/lib/cron-secret";
 import { runScrape } from "@/lib/run-scrape";
 import { adaptSupabase, createSupabaseAdmin } from "@/lib/supabase";
 import type { StoreId } from "@/lib/types";
 import { STORES } from "@/scrapers/stores";
-
-function secretsMatch(presented: string, expected: string): boolean {
-  if (presented.length !== expected.length) return false;
-  let diff = 0;
-  for (let i = 0; i < presented.length; i += 1) {
-    diff |= presented.charCodeAt(i) ^ expected.charCodeAt(i);
-  }
-  return diff === 0;
-}
-
-function presentedSecret(headers: Headers): string | null {
-  const headerSecret = headers.get("x-cron-secret");
-  if (headerSecret) return headerSecret;
-  const authorization = headers.get("authorization");
-  if (authorization && /^bearer /i.test(authorization)) {
-    return authorization.slice(7).trim();
-  }
-  return null;
-}
 
 function json(body: unknown, status: number): Response {
   return Response.json(body, { status });

@@ -1,6 +1,6 @@
 # coffee-price
 
-Argentine specialty-coffee price aggregator. It collects product listings from 17 Argentine stores (specialty roasters plus their MercadoLibre shops), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. A daily Vercel cron (plus on-demand runs) scrapes and upserts rows; the web UI reads them back.
+Argentine specialty-coffee price aggregator. It collects product listings from 17 Argentine stores (specialty roasters plus their MercadoLibre shops), normalizes grammage and prices into a single schema, and stores them in Supabase so prices can be compared on a common `price_per_kg` basis. A daily Netlify scheduled function (plus on-demand runs) scrapes and upserts rows; the web UI reads them back.
 
 ## Stack
 
@@ -8,7 +8,7 @@ Argentine specialty-coffee price aggregator. It collects product listings from 1
 - **Supabase Postgres** as the datastore (service-role writes from the server, public read via RLS policy)
 - **Vitest** for unit tests
 - **Tailwind CSS 4** + ESLint
-- Deployed on **Vercel**, scraped daily by a built-in cron (and on demand)
+- Deployed on **Netlify**, scraped daily by a scheduled function (and on demand)
 
 ## Setup
 
@@ -39,24 +39,34 @@ psql "$SUPABASE_DB_URL" -f supabase/migrations/0001_init.sql
 | --- | --- | --- |
 | `SUPABASE_URL` | Supabase → Settings → API → Project URL | Supabase project endpoint used by the server client |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API → service_role key | Server-only key that bypasses RLS for scraper writes |
-| `CRON_SECRET` | You generate it | Shared secret the cron (built-in Vercel or manual/external) must present to trigger scraping |
+| `CRON_SECRET` | You generate it | Shared secret the cron (Netlify scheduled function or manual/external trigger) must present to trigger scraping |
 
 ## Deploy
 
 1. **Supabase**: create a free project → SQL Editor → paste `supabase/migrations/0001_init.sql` → run. Copy the Project URL and the `service_role` key (Settings → API).
-2. **Vercel**: import the repo → set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` (generate a random string) → deploy.
-3. **First sync** (the UI stays in its empty state until this runs):
+2. **Netlify**: connect the repo → Netlify detects Next.js and uses the Next.js Runtime automatically (`netlify.toml` pins Node 24, build command, and publish dir) → set `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, `CRON_SECRET` (generate a random string) → deploy.
+3. **Domain**: add `quierocafe.shop` (and `www`) to the site, then point the DNS records at Netlify from the registrar (Hostinger). Netlify provisions TLS automatically once DNS resolves.
+4. **First sync** (the UI stays in its empty state until this runs):
 
    ```bash
-   curl -H "x-cron-secret: $CRON_SECRET" "https://<app>.vercel.app/api/scrape?all=1"
+   curl -H "x-cron-secret: $CRON_SECRET" "https://www.quierocafe.shop/api/scrape?all=1"
    ```
 
-4. *(Optional)* **cron-job.org** for hourly refreshes — the built-in Vercel cron runs daily (Hobby plan limit):
-   - URL: `https://<app>.vercel.app/api/scrape`
+   A full `?all=1` run has to finish inside Netlify's 60s synchronous function limit. If it does not, scrape store by store (ids come from `src/scrapers/stores.ts`):
+
+   ```bash
+   for store in cafedelirante cofijaus ruffocoffee; do
+     curl -H "x-cron-secret: $CRON_SECRET" "https://www.quierocafe.shop/api/scrape?store=$store"
+   done
+   ```
+
+5. **Scheduled scrape**: `netlify/functions/scrape-daily.mts` runs at 14:00 UTC and POSTs to the background function `/api/scrape-all`, which scrapes every store with one short `?store=` request each (15 min budget, so the 30s scheduled-function limit is never a problem).
+6. *(Optional)* **cron-job.org** for hourly refreshes — call `/api/scrape` without `all=1` so only due stores run:
+   - URL: `https://www.quierocafe.shop/api/scrape`
    - Method: GET · extra header: `x-cron-secret: <your CRON_SECRET>`
    - Schedule: every hour (custom `0 * * * *`)
 
-   The endpoint scrapes only stores that are due (all refresh every 60 min except flatnwhite, every 6 h) and revalidates the cached catalog via `revalidateTag`.
+   The endpoint scrapes only stores that are due (all refresh every 60 min except flatnwhite, every 6 h) and revalidates the cached catalog via `revalidateTag`. It stays well inside the 60s limit because it skips stores that are not due.
 
 ## Project structure
 
@@ -91,6 +101,10 @@ src/
     index.ts              scrapeStore(id) dispatcher
     __fixtures__/         real payload excerpts powering the offline tests
 next.config.ts            cacheComponents: true
+netlify.toml              build command, publish dir, Node 24
+netlify/functions/
+  scrape-daily.mts        scheduled function (14:00 UTC) -> background trigger
+  scrape-all.mts          background function: one /api/scrape?store= per store
 vitest.config.ts          node environment, src/**/*.test.ts
 ```
 

@@ -34,9 +34,6 @@ yarn-error.log*
 .env*
 !.env.example
 
-# vercel
-.vercel
-
 # typescript
 *.tsbuildinfo
 next-env.d.ts
@@ -51,3 +48,6 @@ dev-smoke.log
 /scripts/out/
 /.vitest/
 .playwright-mcp/
+
+# Local Netlify folder
+.netlify
